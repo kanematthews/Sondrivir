@@ -103,7 +103,7 @@ public class GridPlacementSystem : MonoBehaviour
         if (Physics.Raycast(ray, out RaycastHit hit))
         {
             Vector3Int gridPosition =
-                GetGridPosition(hit.point + hit.normal * 0.5f);
+                GetGridPosition(hit.point + Vector3.up * 0.5f);
 
             currentGridPosition = gridPosition;
 
@@ -173,9 +173,9 @@ public class GridPlacementSystem : MonoBehaviour
     Vector3Int GetGridPosition(Vector3 worldPosition)
     {
         return new Vector3Int(
-            Mathf.RoundToInt(worldPosition.x),
-            Mathf.RoundToInt(worldPosition.y),
-            Mathf.RoundToInt(worldPosition.z)
+            Mathf.FloorToInt(worldPosition.x + 0.5f),
+            Mathf.FloorToInt(worldPosition.y),
+            Mathf.FloorToInt(worldPosition.z + 0.5f)
         );
     }
 }
