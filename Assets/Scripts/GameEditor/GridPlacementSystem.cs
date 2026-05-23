@@ -3,18 +3,39 @@ using UnityEngine;
 
 public class GridPlacementSystem : MonoBehaviour
 {
-    [Header("Selected Asset")]
+    public enum EditorTool
+    {
+        Add,
+        Remove
+    }
+
+    [Header("References")]
     public PlaceableAsset selectedAsset;
 
-    [Header("Scene References")]
     public Transform placedObjectsParent;
 
+    public GridSystem gridSystem;
+
+    [Header("Tool Settings")]
+    public EditorTool currentTool =
+        EditorTool.Add;
+
+    public bool enableDragPlacement = true;
+
     private GameObject previewObject;
+
+    private GameObject highlightedObject;
+
+    private Material originalMaterial;
 
     private Vector3Int currentGridPosition;
 
     private Dictionary<Vector3Int, GameObject> placedObjects
         = new Dictionary<Vector3Int, GameObject>();
+
+    private bool isDragging;
+
+    private int dragLayerY;
 
     void Start()
     {
@@ -23,13 +44,72 @@ public class GridPlacementSystem : MonoBehaviour
 
     void Update()
     {
-        UpdatePreview();
-
-        HandlePlacement();
-
-        if (!Input.GetMouseButton(1))
+        if (!gridSystem.GridGenerated)
         {
+            if (previewObject != null)
+            {
+                previewObject.SetActive(false);
+            }
+
+            return;
+        }
+
+        HandleToolUI();
+
+        HandleDragState();
+
+        if (currentTool == EditorTool.Add)
+        {
+            UpdatePreview();
+
+            HandlePlacement();
+
+            if (previewObject != null)
+            {
+                previewObject.SetActive(true);
+            }
+
+            ClearHighlight();
+        }
+        else
+        {
+            if (previewObject != null)
+            {
+                previewObject.SetActive(false);
+            }
+
+            HandleRemovePreview();
+
             HandleRemoval();
+        }
+    }
+
+    void HandleToolUI()
+    {
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            currentTool = EditorTool.Add;
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            currentTool = EditorTool.Remove;
+        }
+    }
+
+    void HandleDragState()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            isDragging = true;
+
+            dragLayerY =
+                currentGridPosition.y;
+        }
+
+        if (Input.GetMouseButtonUp(0))
+        {
+            isDragging = false;
         }
     }
 
@@ -48,12 +128,15 @@ public class GridPlacementSystem : MonoBehaviour
         previewObject =
             Instantiate(selectedAsset.prefab);
 
-        Collider collider =
-            previewObject.GetComponent<Collider>();
+        previewObject.name =
+            "PlacementPreview";
 
-        if (collider != null)
+        Collider[] colliders =
+            previewObject.GetComponentsInChildren<Collider>();
+
+        foreach (Collider col in colliders)
         {
-            Destroy(collider);
+            Destroy(col);
         }
 
         Renderer[] renderers =
@@ -64,9 +147,10 @@ public class GridPlacementSystem : MonoBehaviour
             Material previewMaterial =
                 new Material(renderer.sharedMaterial);
 
-            SetupMaterialTransparency(previewMaterial);
+            SetupTransparentMaterial(previewMaterial);
 
             Color color = previewMaterial.color;
+
             color.a = 0.5f;
 
             previewMaterial.color = color;
@@ -75,19 +159,25 @@ public class GridPlacementSystem : MonoBehaviour
         }
     }
 
-    void SetupMaterialTransparency(Material material)
+    void SetupTransparentMaterial(Material material)
     {
         material.SetFloat("_Surface", 1);
 
-        material.SetInt("_SrcBlend",
-            (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+        material.SetInt(
+            "_SrcBlend",
+            (int)UnityEngine.Rendering.BlendMode.SrcAlpha
+        );
 
-        material.SetInt("_DstBlend",
-            (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+        material.SetInt(
+            "_DstBlend",
+            (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha
+        );
 
         material.SetInt("_ZWrite", 0);
 
-        material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+        material.EnableKeyword(
+            "_SURFACE_TYPE_TRANSPARENT"
+        );
 
         material.renderQueue = 3000;
     }
@@ -95,20 +185,63 @@ public class GridPlacementSystem : MonoBehaviour
     void UpdatePreview()
     {
         if (previewObject == null)
+        {
+            CreatePreviewObject();
             return;
+        }
 
         Ray ray =
-            Camera.main.ScreenPointToRay(Input.mousePosition);
+            Camera.main.ScreenPointToRay(
+                Input.mousePosition
+            );
 
         if (Physics.Raycast(ray, out RaycastHit hit))
         {
-            Vector3Int gridPosition =
-                GetGridPosition(hit.point + Vector3.up * 0.5f);
+            Vector3Int gridPosition;
 
-            currentGridPosition = gridPosition;
+            if (hit.collider.gameObject.name ==
+                "PlacementSurface")
+            {
+                gridPosition =
+                    GetGridPosition(hit.point);
+            }
+            else
+            {
+                Vector3 hitPoint =
+                    hit.collider.transform.position;
+
+                Vector3 normal =
+                    hit.normal;
+
+                if (normal == Vector3.up &&
+                    !isDragging)
+                {
+                    hitPoint += Vector3.up;
+                }
+
+                gridPosition =
+                    GetGridPosition(hitPoint);
+            }
+
+            if (isDragging)
+            {
+                gridPosition.y =
+                    dragLayerY;
+            }
+
+            if (!gridSystem.IsInsideGrid(gridPosition))
+            {
+                previewObject.SetActive(false);
+                return;
+            }
+
+            previewObject.SetActive(true);
+
+            currentGridPosition =
+                gridPosition;
 
             previewObject.transform.position =
-                gridPosition;
+                GetWorldPosition(gridPosition);
         }
     }
 
@@ -118,16 +251,27 @@ public class GridPlacementSystem : MonoBehaviour
 
     void HandlePlacement()
     {
-        if (!Input.GetMouseButtonDown(0))
-            return;
+        if (enableDragPlacement)
+        {
+            if (!Input.GetMouseButton(0))
+                return;
+        }
+        else
+        {
+            if (!Input.GetMouseButtonDown(0))
+                return;
+        }
 
-        if (placedObjects.ContainsKey(currentGridPosition))
+        if (placedObjects.ContainsKey(
+            currentGridPosition))
+        {
             return;
+        }
 
         GameObject spawnedObject =
             Instantiate(
                 selectedAsset.prefab,
-                currentGridPosition,
+                GetWorldPosition(currentGridPosition),
                 Quaternion.identity,
                 placedObjectsParent
             );
@@ -140,21 +284,94 @@ public class GridPlacementSystem : MonoBehaviour
 
     #endregion
 
-    #region Removal
+    #region Remove Tool
 
-    void HandleRemoval()
+    void HandleRemovePreview()
     {
-        if (!Input.GetMouseButtonDown(1))
-            return;
-
         Ray ray =
-            Camera.main.ScreenPointToRay(Input.mousePosition);
+            Camera.main.ScreenPointToRay(
+                Input.mousePosition
+            );
 
         if (Physics.Raycast(ray, out RaycastHit hit))
         {
+            GameObject hitObject =
+                hit.collider.gameObject;
+
+            if (hitObject.name ==
+                "PlacementSurface")
+            {
+                ClearHighlight();
+                return;
+            }
+
+            if (highlightedObject != hitObject)
+            {
+                ClearHighlight();
+
+                highlightedObject = hitObject;
+
+                Renderer renderer =
+                    highlightedObject.GetComponent<Renderer>();
+
+                if (renderer != null)
+                {
+                    originalMaterial =
+                        renderer.material;
+
+                    Material highlightMat =
+                        new Material(renderer.material);
+
+                    highlightMat.color =
+                        Color.red;
+
+                    renderer.material =
+                        highlightMat;
+                }
+            }
+        }
+        else
+        {
+            ClearHighlight();
+        }
+    }
+
+    void ClearHighlight()
+    {
+        if (highlightedObject != null)
+        {
+            Renderer renderer =
+                highlightedObject.GetComponent<Renderer>();
+
+            if (renderer != null &&
+                originalMaterial != null)
+            {
+                renderer.material =
+                    originalMaterial;
+            }
+
+            highlightedObject = null;
+        }
+    }
+
+    void HandleRemoval()
+    {
+        if (!Input.GetMouseButtonDown(0))
+            return;
+
+        Ray ray =
+            Camera.main.ScreenPointToRay(
+                Input.mousePosition
+            );
+
+        if (Physics.Raycast(ray, out RaycastHit hit))
+        {
+            GameObject hitObject =
+                hit.collider.gameObject;
+
             Vector3Int gridPosition =
                 GetGridPosition(
-                    hit.collider.transform.position
+                    hitObject.transform.position
                 );
 
             if (placedObjects.TryGetValue(
@@ -173,9 +390,54 @@ public class GridPlacementSystem : MonoBehaviour
     Vector3Int GetGridPosition(Vector3 worldPosition)
     {
         return new Vector3Int(
-            Mathf.FloorToInt(worldPosition.x + 0.5f),
-            Mathf.FloorToInt(worldPosition.y),
-            Mathf.FloorToInt(worldPosition.z + 0.5f)
+            Mathf.FloorToInt(worldPosition.x),
+            Mathf.RoundToInt(worldPosition.y),
+            Mathf.FloorToInt(worldPosition.z)
         );
+    }
+
+    Vector3 GetWorldPosition(Vector3Int gridPosition)
+    {
+        return new Vector3(
+            gridPosition.x + 0.5f,
+            gridPosition.y,
+            gridPosition.z + 0.5f
+        );
+    }
+
+    void OnGUI()
+    {
+        GUI.Box(
+            new Rect(10, 210, 180, 100),
+            "Tools"
+        );
+
+        GUI.color =
+            currentTool == EditorTool.Add
+            ? Color.green
+            : Color.white;
+
+        if (GUI.Button(
+            new Rect(20, 240, 140, 25),
+            "Add Tool"
+        ))
+        {
+            currentTool = EditorTool.Add;
+        }
+
+        GUI.color =
+            currentTool == EditorTool.Remove
+            ? Color.red
+            : Color.white;
+
+        if (GUI.Button(
+            new Rect(20, 270, 140, 25),
+            "Remove Tool"
+        ))
+        {
+            currentTool = EditorTool.Remove;
+        }
+
+        GUI.color = Color.white;
     }
 }

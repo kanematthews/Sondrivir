@@ -7,34 +7,47 @@ public class EditorCameraController : MonoBehaviour
 
     [Header("Movement")]
     public float moveSpeed = 20f;
+
     public float sprintMultiplier = 2f;
-    public float panSpeed = 1f;
+
+    public float panSpeed = 0.02f;
 
     [Header("Rotation")]
     public float rotationSpeed = 3f;
 
     [Header("Zoom")]
     public float zoomSpeed = 10f;
+
     public float minZoom = 5f;
-    public float maxZoom = 40f;
+
+    public float maxZoom = 100f;
 
     private Vector3 dragOrigin;
 
     void Update()
     {
         HandleMovement();
+
         HandleRotation();
+
         HandleZoom();
+
         HandleMiddleMousePan();
     }
 
     void HandleMovement()
     {
-        float h = Input.GetAxisRaw("Horizontal");
-        float v = Input.GetAxisRaw("Vertical");
+        float h =
+            Input.GetAxisRaw("Horizontal");
 
-        Vector3 forward = transform.forward;
-        Vector3 right = transform.right;
+        float v =
+            Input.GetAxisRaw("Vertical");
+
+        Vector3 forward =
+            transform.forward;
+
+        Vector3 right =
+            transform.right;
 
         forward.y = 0f;
         right.y = 0f;
@@ -63,7 +76,8 @@ public class EditorCameraController : MonoBehaviour
     {
         if (Input.GetMouseButton(1))
         {
-            float mouseX = Input.GetAxis("Mouse X");
+            float mouseX =
+                Input.GetAxis("Mouse X");
 
             transform.Rotate(
                 Vector3.up,
@@ -75,38 +89,47 @@ public class EditorCameraController : MonoBehaviour
 
     void HandleZoom()
     {
-        float scroll = Input.GetAxis("Mouse ScrollWheel");
+        float scroll =
+            Input.GetAxis("Mouse ScrollWheel");
 
-        Vector3 localPos = cameraTransform.localPosition;
+        Vector3 localPos =
+            cameraTransform.localPosition;
 
-        localPos += cameraTransform.forward *
-                    scroll *
-                    zoomSpeed;
+        localPos +=
+            cameraTransform.forward *
+            scroll *
+            zoomSpeed;
 
-        float distance = localPos.magnitude;
+        float distance =
+            localPos.magnitude;
 
-        distance = Mathf.Clamp(
-            distance,
-            minZoom,
-            maxZoom
-        );
+        distance =
+            Mathf.Clamp(
+                distance,
+                minZoom,
+                maxZoom
+            );
 
-        localPos = localPos.normalized * distance;
+        localPos =
+            localPos.normalized * distance;
 
-        cameraTransform.localPosition = localPos;
+        cameraTransform.localPosition =
+            localPos;
     }
 
     void HandleMiddleMousePan()
     {
         if (Input.GetMouseButtonDown(2))
         {
-            dragOrigin = Input.mousePosition;
+            dragOrigin =
+                Input.mousePosition;
         }
 
         if (Input.GetMouseButton(2))
         {
             Vector3 difference =
-                Input.mousePosition - dragOrigin;
+                Input.mousePosition -
+                dragOrigin;
 
             Vector3 move =
                 (-transform.right * difference.x +
@@ -116,10 +139,10 @@ public class EditorCameraController : MonoBehaviour
 
             transform.position +=
                 move *
-                panSpeed *
-                Time.deltaTime;
+                panSpeed;
 
-            dragOrigin = Input.mousePosition;
+            dragOrigin =
+                Input.mousePosition;
         }
     }
 }
