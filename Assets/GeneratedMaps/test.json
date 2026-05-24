@@ -1,0 +1,1357 @@
+{
+    "chunkSize": 16,
+    "chunkCountX": 2,
+    "chunkCountZ": 1,
+    "chunks": [
+        {
+            "chunkX": 0,
+            "chunkZ": 0,
+            "objects": [
+                {
+                    "assetID": "grass_tile",
+                    "x": 4,
+                    "y": 0,
+                    "z": 9
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 5,
+                    "y": 0,
+                    "z": 10
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 6,
+                    "y": 0,
+                    "z": 10
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 7,
+                    "y": 0,
+                    "z": 10
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 7,
+                    "y": 0,
+                    "z": 11
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 8,
+                    "y": 0,
+                    "z": 11
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 8,
+                    "y": 0,
+                    "z": 12
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 9,
+                    "y": 0,
+                    "z": 12
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 10,
+                    "y": 0,
+                    "z": 12
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 11,
+                    "y": 0,
+                    "z": 12
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 11,
+                    "y": 0,
+                    "z": 13
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 12,
+                    "y": 0,
+                    "z": 13
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 13,
+                    "y": 0,
+                    "z": 13
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 14,
+                    "y": 0,
+                    "z": 13
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 15,
+                    "y": 0,
+                    "z": 13
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 15,
+                    "y": 0,
+                    "z": 12
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 15,
+                    "y": 0,
+                    "z": 0
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 14,
+                    "y": 0,
+                    "z": 0
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 13,
+                    "y": 0,
+                    "z": 0
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 12,
+                    "y": 0,
+                    "z": 0
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 11,
+                    "y": 0,
+                    "z": 0
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 10,
+                    "y": 0,
+                    "z": 0
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 10,
+                    "y": 0,
+                    "z": 1
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 9,
+                    "y": 0,
+                    "z": 1
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 8,
+                    "y": 0,
+                    "z": 1
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 7,
+                    "y": 0,
+                    "z": 1
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 6,
+                    "y": 0,
+                    "z": 1
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 6,
+                    "y": 0,
+                    "z": 2
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 5,
+                    "y": 0,
+                    "z": 2
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 5,
+                    "y": 0,
+                    "z": 3
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 4,
+                    "y": 0,
+                    "z": 3
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 4,
+                    "y": 0,
+                    "z": 4
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 4,
+                    "y": 0,
+                    "z": 5
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 4,
+                    "y": 0,
+                    "z": 6
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 4,
+                    "y": 0,
+                    "z": 7
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 3,
+                    "y": 0,
+                    "z": 7
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 3,
+                    "y": 0,
+                    "z": 8
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 4,
+                    "y": 0,
+                    "z": 8
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 4,
+                    "y": 0,
+                    "z": 10
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 9,
+                    "y": 0,
+                    "z": 11
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 10,
+                    "y": 0,
+                    "z": 11
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 12,
+                    "y": 0,
+                    "z": 12
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 13,
+                    "y": 0,
+                    "z": 12
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 14,
+                    "y": 0,
+                    "z": 12
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 15,
+                    "y": 0,
+                    "z": 1
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 14,
+                    "y": 0,
+                    "z": 1
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 13,
+                    "y": 0,
+                    "z": 1
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 12,
+                    "y": 0,
+                    "z": 1
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 11,
+                    "y": 0,
+                    "z": 1
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 11,
+                    "y": 0,
+                    "z": 2
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 10,
+                    "y": 0,
+                    "z": 2
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 9,
+                    "y": 0,
+                    "z": 2
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 8,
+                    "y": 0,
+                    "z": 2
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 8,
+                    "y": 0,
+                    "z": 3
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 7,
+                    "y": 0,
+                    "z": 3
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 6,
+                    "y": 0,
+                    "z": 3
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 6,
+                    "y": 0,
+                    "z": 4
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 5,
+                    "y": 0,
+                    "z": 4
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 5,
+                    "y": 0,
+                    "z": 5
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 7,
+                    "y": 0,
+                    "z": 2
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 5,
+                    "y": 0,
+                    "z": 6
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 5,
+                    "y": 0,
+                    "z": 7
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 5,
+                    "y": 0,
+                    "z": 8
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 5,
+                    "y": 0,
+                    "z": 9
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 8,
+                    "y": 0,
+                    "z": 10
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 9,
+                    "y": 0,
+                    "z": 10
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 10,
+                    "y": 0,
+                    "z": 10
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 9,
+                    "y": 0,
+                    "z": 9
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 8,
+                    "y": 0,
+                    "z": 9
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 7,
+                    "y": 0,
+                    "z": 9
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 6,
+                    "y": 0,
+                    "z": 9
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 10,
+                    "y": 0,
+                    "z": 9
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 11,
+                    "y": 0,
+                    "z": 9
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 12,
+                    "y": 0,
+                    "z": 10
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 13,
+                    "y": 0,
+                    "z": 10
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 11,
+                    "y": 0,
+                    "z": 10
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 11,
+                    "y": 0,
+                    "z": 11
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 12,
+                    "y": 0,
+                    "z": 11
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 15,
+                    "y": 0,
+                    "z": 11
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 14,
+                    "y": 0,
+                    "z": 11
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 13,
+                    "y": 0,
+                    "z": 11
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 15,
+                    "y": 0,
+                    "z": 10
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 15,
+                    "y": 0,
+                    "z": 2
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 14,
+                    "y": 0,
+                    "z": 2
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 13,
+                    "y": 0,
+                    "z": 2
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 12,
+                    "y": 0,
+                    "z": 2
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 12,
+                    "y": 0,
+                    "z": 3
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 11,
+                    "y": 0,
+                    "z": 3
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 10,
+                    "y": 0,
+                    "z": 3
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 9,
+                    "y": 0,
+                    "z": 3
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 9,
+                    "y": 0,
+                    "z": 4
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 8,
+                    "y": 0,
+                    "z": 4
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 7,
+                    "y": 0,
+                    "z": 4
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 7,
+                    "y": 0,
+                    "z": 5
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 6,
+                    "y": 0,
+                    "z": 5
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 6,
+                    "y": 0,
+                    "z": 6
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 6,
+                    "y": 0,
+                    "z": 7
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 6,
+                    "y": 0,
+                    "z": 8
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 7,
+                    "y": 0,
+                    "z": 8
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 8,
+                    "y": 0,
+                    "z": 8
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 9,
+                    "y": 0,
+                    "z": 8
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 10,
+                    "y": 0,
+                    "z": 8
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 11,
+                    "y": 0,
+                    "z": 8
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 12,
+                    "y": 0,
+                    "z": 8
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 12,
+                    "y": 0,
+                    "z": 9
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 13,
+                    "y": 0,
+                    "z": 9
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 14,
+                    "y": 0,
+                    "z": 9
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 14,
+                    "y": 0,
+                    "z": 10
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 15,
+                    "y": 0,
+                    "z": 9
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 15,
+                    "y": 0,
+                    "z": 4
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 15,
+                    "y": 0,
+                    "z": 3
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 15,
+                    "y": 0,
+                    "z": 5
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 14,
+                    "y": 0,
+                    "z": 5
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 13,
+                    "y": 0,
+                    "z": 4
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 14,
+                    "y": 0,
+                    "z": 4
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 13,
+                    "y": 0,
+                    "z": 5
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 12,
+                    "y": 0,
+                    "z": 4
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 12,
+                    "y": 0,
+                    "z": 5
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 11,
+                    "y": 0,
+                    "z": 5
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 11,
+                    "y": 0,
+                    "z": 6
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 10,
+                    "y": 0,
+                    "z": 6
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 10,
+                    "y": 0,
+                    "z": 5
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 10,
+                    "y": 0,
+                    "z": 4
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 11,
+                    "y": 0,
+                    "z": 4
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 14,
+                    "y": 0,
+                    "z": 3
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 13,
+                    "y": 0,
+                    "z": 3
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 14,
+                    "y": 0,
+                    "z": 6
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 15,
+                    "y": 0,
+                    "z": 6
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 15,
+                    "y": 0,
+                    "z": 7
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 14,
+                    "y": 0,
+                    "z": 7
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 13,
+                    "y": 0,
+                    "z": 7
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 13,
+                    "y": 0,
+                    "z": 8
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 11,
+                    "y": 0,
+                    "z": 7
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 12,
+                    "y": 0,
+                    "z": 7
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 14,
+                    "y": 0,
+                    "z": 8
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 15,
+                    "y": 0,
+                    "z": 8
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 10,
+                    "y": 0,
+                    "z": 7
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 12,
+                    "y": 0,
+                    "z": 6
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 13,
+                    "y": 0,
+                    "z": 6
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 9,
+                    "y": 0,
+                    "z": 7
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 8,
+                    "y": 0,
+                    "z": 7
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 7,
+                    "y": 0,
+                    "z": 7
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 7,
+                    "y": 0,
+                    "z": 6
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 8,
+                    "y": 0,
+                    "z": 6
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 8,
+                    "y": 0,
+                    "z": 5
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 9,
+                    "y": 0,
+                    "z": 5
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 9,
+                    "y": 0,
+                    "z": 6
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 3,
+                    "y": 0,
+                    "z": 3
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 4,
+                    "y": 0,
+                    "z": 1
+                }
+            ]
+        },
+        {
+            "chunkX": 1,
+            "chunkZ": 0,
+            "objects": [
+                {
+                    "assetID": "grass_tile",
+                    "x": 16,
+                    "y": 0,
+                    "z": 12
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 17,
+                    "y": 0,
+                    "z": 12
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 18,
+                    "y": 0,
+                    "z": 12
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 18,
+                    "y": 0,
+                    "z": 11
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 19,
+                    "y": 0,
+                    "z": 11
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 20,
+                    "y": 0,
+                    "z": 11
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 20,
+                    "y": 0,
+                    "z": 10
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 20,
+                    "y": 0,
+                    "z": 9
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 21,
+                    "y": 0,
+                    "z": 9
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 21,
+                    "y": 0,
+                    "z": 8
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 21,
+                    "y": 0,
+                    "z": 7
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 21,
+                    "y": 0,
+                    "z": 6
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 22,
+                    "y": 0,
+                    "z": 6
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 22,
+                    "y": 0,
+                    "z": 5
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 22,
+                    "y": 0,
+                    "z": 4
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 22,
+                    "y": 0,
+                    "z": 3
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 22,
+                    "y": 0,
+                    "z": 2
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 21,
+                    "y": 0,
+                    "z": 2
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 20,
+                    "y": 0,
+                    "z": 2
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 20,
+                    "y": 0,
+                    "z": 1
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 19,
+                    "y": 0,
+                    "z": 1
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 18,
+                    "y": 0,
+                    "z": 1
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 18,
+                    "y": 0,
+                    "z": 0
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 17,
+                    "y": 0,
+                    "z": 0
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 16,
+                    "y": 0,
+                    "z": 0
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 16,
+                    "y": 0,
+                    "z": 11
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 17,
+                    "y": 0,
+                    "z": 11
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 19,
+                    "y": 0,
+                    "z": 10
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 21,
+                    "y": 0,
+                    "z": 5
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 21,
+                    "y": 0,
+                    "z": 4
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 21,
+                    "y": 0,
+                    "z": 3
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 20,
+                    "y": 0,
+                    "z": 3
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 19,
+                    "y": 0,
+                    "z": 2
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 18,
+                    "y": 0,
+                    "z": 2
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 17,
+                    "y": 0,
+                    "z": 2
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 17,
+                    "y": 0,
+                    "z": 1
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 16,
+                    "y": 0,
+                    "z": 1
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 16,
+                    "y": 0,
+                    "z": 10
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 17,
+                    "y": 0,
+                    "z": 10
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 18,
+                    "y": 0,
+                    "z": 10
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 19,
+                    "y": 0,
+                    "z": 9
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 20,
+                    "y": 0,
+                    "z": 8
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 20,
+                    "y": 0,
+                    "z": 7
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 20,
+                    "y": 0,
+                    "z": 6
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 20,
+                    "y": 0,
+                    "z": 5
+                },
+                {
+                    "assetID": "grass_tile",
+                    "x": 20,
+                    "y": 0,
+                    "z": 4
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 19,
+                    "y": 0,
+                    "z": 8
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 19,
+                    "y": 0,
+                    "z": 7
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 19,
+                    "y": 0,
+                    "z": 6
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 19,
+                    "y": 0,
+                    "z": 5
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 19,
+                    "y": 0,
+                    "z": 4
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 19,
+                    "y": 0,
+                    "z": 3
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 18,
+                    "y": 0,
+                    "z": 3
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 17,
+                    "y": 0,
+                    "z": 3
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 16,
+                    "y": 0,
+                    "z": 3
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 16,
+                    "y": 0,
+                    "z": 2
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 16,
+                    "y": 0,
+                    "z": 9
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 17,
+                    "y": 0,
+                    "z": 9
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 18,
+                    "y": 0,
+                    "z": 9
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 18,
+                    "y": 0,
+                    "z": 8
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 18,
+                    "y": 0,
+                    "z": 7
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 18,
+                    "y": 0,
+                    "z": 6
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 18,
+                    "y": 0,
+                    "z": 5
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 18,
+                    "y": 0,
+                    "z": 4
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 17,
+                    "y": 0,
+                    "z": 4
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 16,
+                    "y": 0,
+                    "z": 4
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 17,
+                    "y": 0,
+                    "z": 5
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 17,
+                    "y": 0,
+                    "z": 6
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 16,
+                    "y": 0,
+                    "z": 5
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 16,
+                    "y": 0,
+                    "z": 7
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 17,
+                    "y": 0,
+                    "z": 7
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 16,
+                    "y": 0,
+                    "z": 8
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 16,
+                    "y": 0,
+                    "z": 6
+                },
+                {
+                    "assetID": "stone_tile",
+                    "x": 17,
+                    "y": 0,
+                    "z": 8
+                }
+            ]
+        }
+    ]
+}

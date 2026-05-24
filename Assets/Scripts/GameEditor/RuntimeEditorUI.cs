@@ -43,48 +43,48 @@ public class RuntimeEditorUI : MonoBehaviour
     void CreateUI()
     {
         Canvas canvas =
-            CreateCanvas();
+            FindObjectOfType<Canvas>();
+
+        if (canvas == null)
+        {
+            GameObject canvasObj =
+                new GameObject(
+                    "RuntimeCanvas",
+                    typeof(Canvas),
+                    typeof(CanvasScaler),
+                    typeof(GraphicRaycaster)
+                );
+
+            canvas =
+                canvasObj.GetComponent<
+                    Canvas>();
+
+            canvas.renderMode =
+                RenderMode
+                    .ScreenSpaceOverlay;
+
+            CanvasScaler scaler =
+                canvasObj.GetComponent<
+                    CanvasScaler>();
+
+            scaler.uiScaleMode =
+                CanvasScaler
+                    .ScaleMode
+                    .ScaleWithScreenSize;
+
+            scaler.referenceResolution =
+                new Vector2(
+                    1920,
+                    1080
+                );
+
+            scaler.matchWidthOrHeight =
+                0.5f;
+        }
 
         CreatePalette(
             canvas.transform
         );
-    }
-
-    Canvas CreateCanvas()
-    {
-        GameObject canvasObj =
-            new GameObject(
-                "RuntimeCanvas",
-                typeof(Canvas),
-                typeof(CanvasScaler),
-                typeof(GraphicRaycaster)
-            );
-
-        Canvas canvas =
-            canvasObj.GetComponent<Canvas>();
-
-        canvas.renderMode =
-            RenderMode.ScreenSpaceOverlay;
-
-        CanvasScaler scaler =
-            canvasObj.GetComponent<
-                CanvasScaler>();
-
-        scaler.uiScaleMode =
-            CanvasScaler
-                .ScaleMode
-                .ScaleWithScreenSize;
-
-        scaler.referenceResolution =
-            new Vector2(
-                1920,
-                1080
-            );
-
-        scaler.matchWidthOrHeight =
-            0.5f;
-
-        return canvas;
     }
 
     void CreatePalette(
@@ -137,99 +137,18 @@ public class RuntimeEditorUI : MonoBehaviour
             panel.transform
         );
 
+        float currentY =
+            -50f;
+
         BuildPalette(
-            panel.transform
+            panel.transform,
+            ref currentY
         );
     }
 
-    void CreateCollapseButton(
-        Transform parent)
-    {
-        GameObject buttonObj =
-            CreateUIObject(
-                "CollapseButton",
-                parent
-            );
-
-        RectTransform rect =
-            buttonObj.GetComponent<
-                RectTransform>();
-
-        rect.anchorMin =
-            new Vector2(0, 1);
-
-        rect.anchorMax =
-            new Vector2(0, 1);
-
-        rect.pivot =
-            new Vector2(
-                0,
-                1
-            );
-
-        rect.sizeDelta =
-            new Vector2(
-                30,
-                30
-            );
-
-        rect.anchoredPosition =
-            new Vector2(
-                5,
-                -5
-            );
-
-        Image bg =
-            buttonObj.AddComponent<
-                Image>();
-
-        bg.color =
-            new Color(
-                0.2f,
-                0.2f,
-                0.2f,
-                1f
-            );
-
-        Button button =
-            buttonObj.AddComponent<
-                Button>();
-
-        TMP_Text text =
-            CreateText(
-                buttonObj.transform,
-                ">",
-                22
-            );
-
-        text.alignment =
-            TextAlignmentOptions
-                .Center;
-
-        RectTransform textRect =
-            text.GetComponent<
-                RectTransform>();
-
-        textRect.anchorMin =
-            Vector2.zero;
-
-        textRect.anchorMax =
-            Vector2.one;
-
-        textRect.offsetMin =
-            Vector2.zero;
-
-        textRect.offsetMax =
-            Vector2.zero;
-
-        button.onClick
-            .AddListener(
-                TogglePalette
-            );
-    }
-
     void BuildPalette(
-        Transform parent)
+        Transform parent,
+        ref float currentY)
     {
         Dictionary<
             string,
@@ -276,9 +195,6 @@ public class RuntimeEditorUI : MonoBehaviour
                 asset.category
             ].Add(asset);
         }
-
-        float currentY =
-            -100f;
 
         foreach (
             var category
@@ -331,11 +247,89 @@ public class RuntimeEditorUI : MonoBehaviour
 
             currentY -=
                 ((row + 1)
-                * (buttonSize.y + buttonSpacing));
+                * (buttonSize.y
+                + buttonSpacing));
 
             currentY -=
                 categorySpacing;
         }
+    }
+
+    void CreateCollapseButton(
+        Transform parent)
+    {
+        GameObject buttonObj =
+            CreateUIObject(
+                "CollapseButton",
+                parent
+            );
+
+        RectTransform rect =
+            buttonObj.GetComponent<
+                RectTransform>();
+
+        rect.anchorMin =
+            new Vector2(0, 1);
+
+        rect.anchorMax =
+            new Vector2(0, 1);
+
+        rect.pivot =
+            new Vector2(0, 1);
+
+        rect.sizeDelta =
+            new Vector2(30, 30);
+
+        rect.anchoredPosition =
+            new Vector2(5, -5);
+
+        Image bg =
+            buttonObj.AddComponent<
+                Image>();
+
+        bg.color =
+            new Color(
+                0.2f,
+                0.2f,
+                0.2f,
+                1f
+            );
+
+        Button button =
+            buttonObj.AddComponent<
+                Button>();
+
+        TMP_Text text =
+            CreateText(
+                buttonObj.transform,
+                ">",
+                22
+            );
+
+        text.alignment =
+            TextAlignmentOptions
+                .Center;
+
+        RectTransform textRect =
+            text.GetComponent<
+                RectTransform>();
+
+        textRect.anchorMin =
+            Vector2.zero;
+
+        textRect.anchorMax =
+            Vector2.one;
+
+        textRect.offsetMin =
+            Vector2.zero;
+
+        textRect.offsetMax =
+            Vector2.zero;
+
+        button.onClick
+            .AddListener(
+                TogglePalette
+            );
     }
 
     void CreateCategoryHeader(
@@ -389,22 +383,10 @@ public class RuntimeEditorUI : MonoBehaviour
                 1f
             );
 
-        Button button =
-            header.AddComponent<
-                Button>();
-
-        bool expanded =
-            categoryExpanded[
-                categoryName
-            ];
-
         TMP_Text text =
             CreateText(
                 header.transform,
-                (expanded
-                    ? "▼ "
-                    : "▶ ")
-                + categoryName,
+                categoryName,
                 24
             );
 
@@ -430,19 +412,6 @@ public class RuntimeEditorUI : MonoBehaviour
 
         textRect.offsetMax =
             Vector2.zero;
-
-        button.onClick
-            .AddListener(() =>
-        {
-            categoryExpanded[
-                categoryName
-            ] =
-                !categoryExpanded[
-                    categoryName
-                ];
-
-            RebuildPalette();
-        });
 
         currentY -= 50f;
     }
@@ -471,10 +440,7 @@ public class RuntimeEditorUI : MonoBehaviour
             new Vector2(0, 1);
 
         rect.pivot =
-            new Vector2(
-                0,
-                1
-            );
+            new Vector2(0, 1);
 
         float x =
             panelPadding +
@@ -524,34 +490,19 @@ public class RuntimeEditorUI : MonoBehaviour
                 RectTransform>();
 
         previewRect.anchorMin =
-            new Vector2(
-                0,
-                1
-            );
+            new Vector2(0, 1);
 
         previewRect.anchorMax =
-            new Vector2(
-                0,
-                1
-            );
+            new Vector2(0, 1);
 
         previewRect.pivot =
-            new Vector2(
-                0,
-                1
-            );
+            new Vector2(0, 1);
 
         previewRect.sizeDelta =
-            new Vector2(
-                64,
-                64
-            );
+            new Vector2(64, 64);
 
         previewRect.anchoredPosition =
-            new Vector2(
-                8,
-                -8
-            );
+            new Vector2(8, -8);
 
         RawImage image =
             preview.AddComponent<
@@ -565,78 +516,46 @@ public class RuntimeEditorUI : MonoBehaviour
         image.color =
             Color.white;
 
-        GameObject label =
-            CreateUIObject(
-                "Label",
-                buttonObj.transform
-            );
-
-        RectTransform labelRect =
-            label.GetComponent<
-                RectTransform>();
-
-        labelRect.anchorMin =
-            new Vector2(
-                0,
-                0
-            );
-
-        labelRect.anchorMax =
-            new Vector2(
-                1,
-                0
-            );
-
-        labelRect.pivot =
-            new Vector2(
-                0.5f,
-                0
-            );
-
-        labelRect.sizeDelta =
-            new Vector2(
-                -10,
-                22
-            );
-
-        labelRect.anchoredPosition =
-            new Vector2(
-                0,
-                4
-            );
-
         TMP_Text text =
             CreateText(
-                label.transform,
+                buttonObj.transform,
                 asset.displayName,
                 18
             );
 
         text.alignment =
             TextAlignmentOptions
-                .Center;
+                .Bottom;
 
         RectTransform textRect =
             text.GetComponent<
                 RectTransform>();
 
         textRect.anchorMin =
-            Vector2.zero;
+            new Vector2(0, 0);
 
         textRect.anchorMax =
-            Vector2.one;
+            new Vector2(1, 0);
 
-        textRect.offsetMin =
-            Vector2.zero;
+        textRect.pivot =
+            new Vector2(
+                0.5f,
+                0
+            );
 
-        textRect.offsetMax =
-            Vector2.zero;
+        textRect.sizeDelta =
+            new Vector2(
+                -10,
+                22
+            );
+
+        textRect.anchoredPosition =
+            new Vector2(0, 4);
 
         button.onClick
             .AddListener(() =>
         {
-            placementSystem
-                .selectedAsset =
+            placementSystem.selectedAsset =
                 asset;
         });
     }
@@ -692,40 +611,6 @@ public class RuntimeEditorUI : MonoBehaviour
             );
 
         return obj;
-    }
-
-    void RebuildPalette()
-    {
-        List<GameObject> children =
-            new List<GameObject>();
-
-        foreach (
-            Transform child
-            in panelRect
-        )
-        {
-            if (
-                child.name !=
-                "CollapseButton"
-            )
-            {
-                children.Add(
-                    child.gameObject
-                );
-            }
-        }
-
-        foreach (
-            GameObject child
-            in children
-        )
-        {
-            Destroy(child);
-        }
-
-        BuildPalette(
-            panelRect
-        );
     }
 
     void TogglePalette()

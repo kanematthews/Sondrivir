@@ -142,106 +142,139 @@ public class GridPlacementSystem : MonoBehaviour
     }
 
     void HandlePlacement()
+{
+    if (currentTool != EditorTool.Add)
+        return;
+
+    if (selectedAsset == null)
+        return;
+
+    // SINGLE CLICK
+    if (Input.GetMouseButtonDown(0))
     {
-        if (currentTool != EditorTool.Add)
-            return;
-
-        if (selectedAsset == null)
-            return;
-
-        if (Input.GetMouseButtonDown(0))
-        {
-            dragPlacementMode = true;
-        }
-
-        if (!Input.GetMouseButton(0))
-        {
-            lastPlacedPosition =
-                Vector3Int.one * -9999;
-
-            dragPlacementMode = false;
-
-            return;
-        }
-
-        if (!GetMouseGridPosition(
-            out Vector3Int gridPos))
-            return;
-
-        int targetHeight =
-            GetPlacementHeight(gridPos);
-
-        Vector3Int finalPos =
-            new Vector3Int(
-                gridPos.x,
-                targetHeight,
-                gridPos.z
-            );
-
-        if (finalPos == lastPlacedPosition)
-            return;
-
-        lastPlacedPosition =
-            finalPos;
-
-        if (PlacedTiles.ContainsKey(finalPos))
-            return;
-
-        GameObject obj =
-            Instantiate(
-                selectedAsset.prefab,
-                new Vector3(
-                    finalPos.x + 0.5f,
-                    finalPos.y,
-                    finalPos.z + 0.5f
-                ),
-                Quaternion.identity
-            );
-
-        obj.name =
-            selectedAsset.displayName;
-
-        PlacedObjectData data =
-            new PlacedObjectData();
-
-        data.assetID =
-            selectedAsset.assetID;
-
-        data.x = finalPos.x;
-        data.y = finalPos.y;
-        data.z = finalPos.z;
-
-        PlacedTiles.Add(
-            finalPos,
-            new PlacedTile(
-                obj,
-                data
-            )
-        );
+        TryPlace(false);
     }
+
+    // HOLD DRAG
+    if (Input.GetMouseButton(0))
+    {
+        TryPlace(true);
+    }
+
+    if (!Input.GetMouseButton(0))
+    {
+        lastPlacedPosition =
+            Vector3Int.one * -9999;
+    }
+}
+
+void TryPlace(bool dragMode)
+{
+    if (!GetMouseGridPosition(
+        out Vector3Int gridPos))
+        return;
+
+    int topHeight =
+        GetTopHeight(gridPos);
+
+    int targetHeight;
+
+    // DRAG MODE =
+    // terrain painting
+    if (dragMode)
+    {
+        targetHeight =
+            Mathf.Max(0, topHeight);
+    }
+    else
+    {
+        // SINGLE CLICK =
+        // stack upward
+        targetHeight =
+            topHeight + 1;
+    }
+
+    Vector3Int finalPos =
+        new Vector3Int(
+            gridPos.x,
+            targetHeight,
+            gridPos.z
+        );
+
+    if (finalPos == lastPlacedPosition)
+        return;
+
+    lastPlacedPosition =
+        finalPos;
+
+    if (PlacedTiles.ContainsKey(finalPos))
+        return;
+
+    GameObject obj =
+        Instantiate(
+            selectedAsset.prefab,
+            new Vector3(
+                finalPos.x + 0.5f,
+                finalPos.y,
+                finalPos.z + 0.5f
+            ),
+            Quaternion.identity
+        );
+
+    obj.name =
+        selectedAsset.displayName;
+
+    PlacedObjectData data =
+        new PlacedObjectData();
+
+    data.assetID =
+        selectedAsset.assetID;
+
+    data.x = finalPos.x;
+    data.y = finalPos.y;
+    data.z = finalPos.z;
+
+    PlacedTiles.Add(
+        finalPos,
+        new PlacedTile(
+            obj,
+            data
+        )
+    );
+}
 
     int GetPlacementHeight(
-        Vector3Int gridPos)
+    Vector3Int gridPos)
+{
+    int topHeight =
+        GetTopHeight(gridPos);
+
+    // HOLD SHIFT =
+    // force vertical stacking
+    if (Input.GetKey(KeyCode.LeftShift))
     {
-        int topHeight =
-            GetTopHeight(gridPos);
-
-        // HOLDING MOUSE =
-        // terrain painting mode
-        if (dragPlacementMode)
-        {
-            if (topHeight >= 0)
-            {
-                return topHeight;
-            }
-
-            return 0;
-        }
-
-        // SINGLE CLICK =
-        // intentional stacking
         return topHeight + 1;
     }
+
+    // HOLDING MOUSE =
+    // terrain painting mode
+    if (dragPlacementMode)
+    {
+        // If tile exists,
+        // stay at same height
+        if (topHeight >= 0)
+        {
+            return topHeight;
+        }
+
+        // Otherwise place on ground
+        return 0;
+    }
+
+    // SINGLE CLICK =
+    // intentional stacking
+    return topHeight + 1;
+}
 
     void HandleRemove()
     {

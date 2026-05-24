@@ -593,12 +593,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 543732b9c04df3c44a1b2b7ec7613bd3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RuntimeEditorUI
-  gridSystem: {fileID: 435382330}
   placementSystem: {fileID: 1656244535}
   worldExporter: {fileID: 2031488993}
   assets:
   - {fileID: 11400000, guid: 206438da636092e41a27b5c7ac0285a6, type: 2}
   - {fileID: 11400000, guid: 32bcc797fd58491438acb1756e7c9440, type: 2}
+  panelWidth: 340
+  panelPadding: 10
+  categorySpacing: 20
+  buttonSpacing: 8
+  buttonSize: {x: 150, y: 80}
 --- !u!1 &1650291355
 GameObject:
   m_ObjectHideFlags: 0
