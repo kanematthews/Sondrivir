@@ -17,4 +17,4 @@ MonoBehaviour:
   description: This is a grass tile!
   category: Terrain
   prefab: {fileID: 4511650358089908755, guid: 18f75502916887e4999f672632d2fbaf, type: 3}
-  previewTexture: {fileID: 2800000, guid: 2643cd49def65044dba64fef2119b255, type: 3}
+  previewTexture: {fileID: 2800000, guid: 14c66593964f5ea42bf989ee06804542, type: 3}

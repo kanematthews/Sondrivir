@@ -17,4 +17,4 @@ MonoBehaviour:
   description: Placeable stone terrain tile!
   category: Terrain
   prefab: {fileID: 1111871533711250908, guid: 8f29713188a699c4ca3bbe02d6d8d10f, type: 3}
-  previewTexture: {fileID: 2800000, guid: a98f33f4377ec2b4fbde0fe077110967, type: 3}
+  previewTexture: {fileID: 2800000, guid: 94491080a957c674aa0c32e07f8edc5d, type: 3}
