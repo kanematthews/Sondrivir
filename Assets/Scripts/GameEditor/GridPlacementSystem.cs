@@ -30,12 +30,17 @@ public class GridPlacementSystem : MonoBehaviour
 
     private Vector3Int currentGridPosition;
 
-    private Dictionary<Vector3Int, GameObject> placedObjects
-        = new Dictionary<Vector3Int, GameObject>();
+    private Dictionary<Vector3Int, PlacedTile>
+        placedTiles =
+        new Dictionary<Vector3Int, PlacedTile>();
 
     private bool isDragging;
 
     private int dragLayerY;
+
+    public Dictionary<Vector3Int, PlacedTile>
+        PlacedTiles =>
+        placedTiles;
 
     void Start()
     {
@@ -53,8 +58,6 @@ public class GridPlacementSystem : MonoBehaviour
 
             return;
         }
-
-        HandleToolUI();
 
         HandleDragState();
 
@@ -81,19 +84,6 @@ public class GridPlacementSystem : MonoBehaviour
             HandleRemovePreview();
 
             HandleRemoval();
-        }
-    }
-
-    void HandleToolUI()
-    {
-        if (Input.GetKeyDown(KeyCode.Alpha1))
-        {
-            currentTool = EditorTool.Add;
-        }
-
-        if (Input.GetKeyDown(KeyCode.Alpha2))
-        {
-            currentTool = EditorTool.Remove;
         }
     }
 
@@ -149,13 +139,16 @@ public class GridPlacementSystem : MonoBehaviour
 
             SetupTransparentMaterial(previewMaterial);
 
-            Color color = previewMaterial.color;
+            Color color =
+                previewMaterial.color;
 
             color.a = 0.5f;
 
-            previewMaterial.color = color;
+            previewMaterial.color =
+                color;
 
-            renderer.material = previewMaterial;
+            renderer.material =
+                previewMaterial;
         }
     }
 
@@ -262,7 +255,7 @@ public class GridPlacementSystem : MonoBehaviour
                 return;
         }
 
-        if (placedObjects.ContainsKey(
+        if (placedTiles.ContainsKey(
             currentGridPosition))
         {
             return;
@@ -276,9 +269,30 @@ public class GridPlacementSystem : MonoBehaviour
                 placedObjectsParent
             );
 
-        placedObjects.Add(
+        PlacedObjectData data =
+            new PlacedObjectData();
+
+        data.assetID =
+            selectedAsset.assetID;
+
+        data.x =
+            currentGridPosition.x;
+
+        data.y =
+            currentGridPosition.y;
+
+        data.z =
+            currentGridPosition.z;
+
+        PlacedTile tile =
+            new PlacedTile(
+                spawnedObject,
+                data
+            );
+
+        placedTiles.Add(
             currentGridPosition,
-            spawnedObject
+            tile
         );
     }
 
@@ -309,7 +323,8 @@ public class GridPlacementSystem : MonoBehaviour
             {
                 ClearHighlight();
 
-                highlightedObject = hitObject;
+                highlightedObject =
+                    hitObject;
 
                 Renderer renderer =
                     highlightedObject.GetComponent<Renderer>();
@@ -366,21 +381,18 @@ public class GridPlacementSystem : MonoBehaviour
 
         if (Physics.Raycast(ray, out RaycastHit hit))
         {
-            GameObject hitObject =
-                hit.collider.gameObject;
-
             Vector3Int gridPosition =
                 GetGridPosition(
-                    hitObject.transform.position
+                    hit.collider.transform.position
                 );
 
-            if (placedObjects.TryGetValue(
+            if (placedTiles.TryGetValue(
                 gridPosition,
-                out GameObject placedObject))
+                out PlacedTile tile))
             {
-                Destroy(placedObject);
+                Destroy(tile.instance);
 
-                placedObjects.Remove(gridPosition);
+                placedTiles.Remove(gridPosition);
             }
         }
     }
@@ -408,7 +420,7 @@ public class GridPlacementSystem : MonoBehaviour
     void OnGUI()
     {
         GUI.Box(
-            new Rect(10, 210, 180, 100),
+            new Rect(10, 230, 180, 100),
             "Tools"
         );
 
@@ -418,11 +430,12 @@ public class GridPlacementSystem : MonoBehaviour
             : Color.white;
 
         if (GUI.Button(
-            new Rect(20, 240, 140, 25),
+            new Rect(20, 260, 140, 25),
             "Add Tool"
         ))
         {
-            currentTool = EditorTool.Add;
+            currentTool =
+                EditorTool.Add;
         }
 
         GUI.color =
@@ -431,11 +444,12 @@ public class GridPlacementSystem : MonoBehaviour
             : Color.white;
 
         if (GUI.Button(
-            new Rect(20, 270, 140, 25),
+            new Rect(20, 290, 140, 25),
             "Remove Tool"
         ))
         {
-            currentTool = EditorTool.Remove;
+            currentTool =
+                EditorTool.Remove;
         }
 
         GUI.color = Color.white;

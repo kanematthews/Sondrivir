@@ -227,7 +227,7 @@ public class GridSystem : MonoBehaviour
     void OnGUI()
     {
         GUI.Box(
-            new Rect(10, 10, 240, 180),
+            new Rect(10, 10, 240, 210),
             "Grid Controls"
         );
 
@@ -272,7 +272,7 @@ public class GridSystem : MonoBehaviour
         }
 
         GUI.Label(
-            new Rect(20, 150, 200, 20),
+            new Rect(20, 155, 200, 20),
             $"Grid: {WorldSizeX} x {WorldSizeZ}"
         );
     }
