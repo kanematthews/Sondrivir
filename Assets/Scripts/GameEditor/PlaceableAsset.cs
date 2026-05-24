@@ -23,4 +23,19 @@ public class PlaceableAsset
 
     [Header("Preview")]
     public Texture2D previewTexture;
+
+    [Header("Placement")]
+    public Vector3 placementRotation;
+
+    public Vector3 placementOffset;
+
+    public bool placeAtGroundLevel = true;
+
+    [Header("Surface Type")]
+    public bool isQuad = false;
+
+    [Header("Gameplay")]
+    public bool blocksMovement = false;
+
+    public bool isWater = false;
 }
