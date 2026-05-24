@@ -13,6 +13,12 @@ public class WorldExporter : MonoBehaviour
     public string exportFileName =
         "GeneratedWorld.json";
 
+    [Header("World Placement")]
+    [Tooltip("Where this region should exist in the REAL game world.")]
+    public int exportChunkOffsetX = 0;
+
+    public int exportChunkOffsetZ = 0;
+
     public void ExportWorld()
     {
         if (placementSystem == null)
@@ -57,26 +63,34 @@ public class WorldExporter : MonoBehaviour
             PlacedTile tile =
                 pair.Value;
 
-            // FUTURE ROTATION SUPPORT
+            // Save rotation
             tile.data.rotationY =
                 tile.instance.transform.eulerAngles.y;
 
-            int chunkX =
+            // LOCAL chunk coordinates
+            int localChunkX =
                 Mathf.FloorToInt(
                     (float)position.x /
                     gridSystem.chunkSize
                 );
 
-            int chunkZ =
+            int localChunkZ =
                 Mathf.FloorToInt(
                     (float)position.z /
                     gridSystem.chunkSize
                 );
 
+            // FINAL WORLD chunk coordinates
+            int worldChunkX =
+                localChunkX + exportChunkOffsetX;
+
+            int worldChunkZ =
+                localChunkZ + exportChunkOffsetZ;
+
             Vector2Int chunkKey =
                 new Vector2Int(
-                    chunkX,
-                    chunkZ
+                    worldChunkX,
+                    worldChunkZ
                 );
 
             if (!chunkLookup.ContainsKey(chunkKey))
@@ -85,10 +99,10 @@ public class WorldExporter : MonoBehaviour
                     new ChunkData();
 
                 chunk.chunkX =
-                    chunkX;
+                    worldChunkX;
 
                 chunk.chunkZ =
-                    chunkZ;
+                    worldChunkZ;
 
                 chunkLookup.Add(
                     chunkKey,
@@ -100,9 +114,33 @@ public class WorldExporter : MonoBehaviour
                 );
             }
 
+            // CREATE A COPY
+            // Never modify editor data directly
+            PlacedObjectData objectData =
+                new PlacedObjectData();
+
+            objectData.assetID =
+                tile.data.assetID;
+
+            objectData.rotationY =
+                tile.data.rotationY;
+
+            objectData.y =
+                tile.data.y;
+
+            // Convert LOCAL editor positions
+            // into FINAL WORLD positions
+            objectData.x =
+                tile.data.x +
+                (exportChunkOffsetX * gridSystem.chunkSize);
+
+            objectData.z =
+                tile.data.z +
+                (exportChunkOffsetZ * gridSystem.chunkSize);
+
             chunkLookup[chunkKey]
                 .objects
-                .Add(tile.data);
+                .Add(objectData);
         }
 
         string json =
@@ -142,12 +180,16 @@ public class WorldExporter : MonoBehaviour
         Debug.Log(
             $"World exported successfully:\n{fullPath}"
         );
+
+        Debug.Log(
+            $"Export Offset Applied:\nChunk X: {exportChunkOffsetX}\nChunk Z: {exportChunkOffsetZ}"
+        );
     }
 
     void OnGUI()
     {
         GUI.Box(
-            new Rect(10, 350, 220, 120),
+            new Rect(10, 350, 250, 190),
             "Export"
         );
 
@@ -158,12 +200,44 @@ public class WorldExporter : MonoBehaviour
 
         exportFileName =
             GUI.TextField(
-                new Rect(20, 405, 180, 20),
+                new Rect(20, 405, 200, 20),
                 exportFileName
             );
 
+        GUI.Label(
+            new Rect(20, 435, 120, 20),
+            "Chunk Offset X"
+        );
+
+        string offsetXString =
+            GUI.TextField(
+                new Rect(140, 435, 60, 20),
+                exportChunkOffsetX.ToString()
+            );
+
+        int.TryParse(
+            offsetXString,
+            out exportChunkOffsetX
+        );
+
+        GUI.Label(
+            new Rect(20, 465, 120, 20),
+            "Chunk Offset Z"
+        );
+
+        string offsetZString =
+            GUI.TextField(
+                new Rect(140, 465, 60, 20),
+                exportChunkOffsetZ.ToString()
+            );
+
+        int.TryParse(
+            offsetZString,
+            out exportChunkOffsetZ
+        );
+
         if (GUI.Button(
-            new Rect(20, 435, 180, 25),
+            new Rect(20, 500, 200, 25),
             "Export World"
         ))
         {

@@ -9,12 +9,18 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e629cbd22848d7140b1b2fc8663b9396, type: 3}
+  m_Script: {fileID: 11500000, guid: 1a798df8f12d9e044bab2a35944a393f, type: 3}
   m_Name: PA_GrassTile
   m_EditorClassIdentifier: Assembly-CSharp::PlaceableAsset
   assetID: grass_tile
   displayName: Grass Tile
-  description: This is a grass tile!
+  description: Placeable Grass!
   category: Terrain
   prefab: {fileID: 4511650358089908755, guid: 18f75502916887e4999f672632d2fbaf, type: 3}
-  previewTexture: {fileID: 2800000, guid: 14c66593964f5ea42bf989ee06804542, type: 3}
+  previewTexture: {fileID: 2800000, guid: 2643cd49def65044dba64fef2119b255, type: 3}
+  placementRotation: {x: 0, y: 0, z: 0}
+  placementOffset: {x: 0, y: 0, z: 0}
+  placeAtGroundLevel: 1
+  isQuad: 0
+  blocksMovement: 0
+  isWater: 0
