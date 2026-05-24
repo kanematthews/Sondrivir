@@ -22,5 +22,5 @@ public class PlaceableAsset
     public GameObject prefab;
 
     [Header("Preview")]
-    public Texture2D previewImage;
+    public Texture2D previewTexture;
 }

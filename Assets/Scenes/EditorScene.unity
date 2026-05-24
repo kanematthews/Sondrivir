@@ -549,6 +549,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1511413760
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1511413761}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1511413761
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1511413760}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.01993, y: -0, z: 5.18435}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1551733569
 GameObject:
   m_ObjectHideFlags: 0
@@ -596,6 +627,7 @@ MonoBehaviour:
   placementSystem: {fileID: 1656244535}
   assets:
   - {fileID: 11400000, guid: 206438da636092e41a27b5c7ac0285a6, type: 2}
+  - {fileID: 11400000, guid: 32bcc797fd58491438acb1756e7c9440, type: 2}
   expanded: 1
   panelWidth: 320
 --- !u!1 &1656244533
@@ -642,11 +674,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7bc1d1b014ea75144b1e69bd594c392b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GridPlacementSystem
-  selectedAsset: {fileID: 11400000, guid: 206438da636092e41a27b5c7ac0285a6, type: 2}
-  placedObjectsParent: {fileID: 1451105920}
+  sceneCamera: {fileID: 233502755}
   gridSystem: {fileID: 435382330}
+  selectedAsset: {fileID: 11400000, guid: 206438da636092e41a27b5c7ac0285a6, type: 2}
   currentTool: 0
-  enableDragPlacement: 1
 --- !u!1 &2031488992
 GameObject:
   m_ObjectHideFlags: 0
@@ -705,3 +736,4 @@ SceneRoots:
   - {fileID: 1551733570}
   - {fileID: 504015801}
   - {fileID: 2031488994}
+  - {fileID: 1511413761}
