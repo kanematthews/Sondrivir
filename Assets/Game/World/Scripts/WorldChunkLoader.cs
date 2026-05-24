@@ -137,10 +137,6 @@ public class WorldChunkLoader : MonoBehaviour
             return;
         }
 
-        // IMPORTANT:
-        // Your exporter already stores WORLD positions.
-        // DO NOT apply chunk offsets again.
-
         Vector3 worldPosition =
             new Vector3(
                 obj.x,
@@ -148,18 +144,31 @@ public class WorldChunkLoader : MonoBehaviour
                 obj.z
             );
 
-        Quaternion rotation =
+        Quaternion objectRotation =
             Quaternion.Euler(
                 0f,
                 obj.rotationY,
                 0f
             );
 
+        Quaternion placementRotation =
+            Quaternion.identity;
+
+        // Rotate quads flat (water, grass, floor tiles etc)
+        if (asset.isQuad)
+        {
+            placementRotation =
+                Quaternion.Euler(90f, 0f, 0f);
+        }
+
+        Quaternion finalRotation =
+            objectRotation * placementRotation;
+
         GameObject spawned =
             Instantiate(
                 asset.prefab,
                 worldPosition,
-                rotation,
+                finalRotation,
                 parent
             );
 
