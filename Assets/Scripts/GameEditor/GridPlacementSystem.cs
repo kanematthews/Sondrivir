@@ -3,305 +3,429 @@ using UnityEngine;
 
 public class GridPlacementSystem : MonoBehaviour
 {
-    public enum EditorTool
+public enum EditorTool
+{
+Add,
+Remove,
+Fill
+}
+
+[Header("References")]
+public Camera sceneCamera;
+
+public GridSystem gridSystem;
+
+[Header("Selected Asset")]
+public PlaceableAsset selectedAsset;
+
+[Header("Tools")]
+public EditorTool currentTool =
+    EditorTool.Add;
+
+public Dictionary<Vector3Int, PlacedTile>
+    PlacedTiles =
+    new Dictionary<Vector3Int, PlacedTile>();
+
+private GameObject previewObject;
+
+private PlaceableAsset lastAsset;
+
+private Vector3Int lastPlacedPosition =
+    Vector3Int.one * -9999;
+
+private bool dragPlacementMode;
+
+void Update()
+{
+    if (!gridSystem.GridGenerated)
     {
-        Add,
-        Remove
+        HidePreview();
+        return;
     }
 
-    [Header("References")]
-    public Camera sceneCamera;
+    dragPlacementMode =
+        Input.GetMouseButton(0);
 
-    public GridSystem gridSystem;
+    UpdatePreviewAsset();
 
-    [Header("Selected Asset")]
-    public PlaceableAsset selectedAsset;
+    UpdatePreviewPosition();
 
-    [Header("Tools")]
-    public EditorTool currentTool =
-        EditorTool.Add;
+    HandlePlacement();
 
-    public Dictionary<Vector3Int, PlacedTile>
-        PlacedTiles =
-        new Dictionary<Vector3Int, PlacedTile>();
+    HandleFill();
 
-    private GameObject previewObject;
+    HandleRemove();
+}
 
-    private PlaceableAsset lastAsset;
+void UpdatePreviewAsset()
+{
+    if (selectedAsset == lastAsset)
+        return;
 
-    private Vector3Int lastPlacedPosition =
-        Vector3Int.one * -9999;
+    lastAsset = selectedAsset;
 
-    private bool dragPlacementMode;
+    CreatePreviewObject();
+}
 
-    void Update()
+Quaternion GetPlacementRotation()
+{
+    if (selectedAsset == null)
+        return Quaternion.identity;
+
+    Quaternion rotation =
+        Quaternion.Euler(
+            selectedAsset.placementRotation
+        );
+
+    if (selectedAsset.isQuad)
     {
-        if (!gridSystem.GridGenerated)
-        {
-            HidePreview();
-            return;
-        }
-
-        dragPlacementMode =
-            Input.GetMouseButton(0);
-
-        UpdatePreviewAsset();
-
-        UpdatePreviewPosition();
-
-        HandlePlacement();
-
-        HandleRemove();
-    }
-
-    void UpdatePreviewAsset()
-    {
-        if (selectedAsset == lastAsset)
-            return;
-
-        lastAsset = selectedAsset;
-
-        CreatePreviewObject();
-    }
-
-    Quaternion GetPlacementRotation()
-    {
-        if (selectedAsset == null)
-            return Quaternion.identity;
-
-        Quaternion rotation =
+        rotation *=
             Quaternion.Euler(
-                selectedAsset.placementRotation
+                90f,
+                0f,
+                0f
             );
-
-        // QUAD FIX
-        if (selectedAsset.isQuad)
-        {
-            rotation *=
-                Quaternion.Euler(
-                    90f,
-                    0f,
-                    0f
-                );
-        }
-
-        return rotation;
     }
 
-    void CreatePreviewObject()
+    return rotation;
+}
+
+void CreatePreviewObject()
+{
+    if (previewObject != null)
     {
-        if (previewObject != null)
-        {
-            Destroy(previewObject);
-        }
-
-        if (selectedAsset == null)
-            return;
-
-        previewObject =
-            Instantiate(
-                selectedAsset.prefab
-            );
-
-        previewObject.name =
-            "PlacementPreview";
-
-        previewObject.transform.rotation =
-            GetPlacementRotation();
-
-        Renderer[] renderers =
-            previewObject
-            .GetComponentsInChildren<Renderer>();
-
-        foreach (Renderer renderer in renderers)
-        {
-            Material[] mats =
-                renderer.materials;
-
-            for (int i = 0; i < mats.Length; i++)
-            {
-                Material previewMat =
-                    new Material(mats[i]);
-
-                Color color =
-                    previewMat.color;
-
-                color.a = 0.5f;
-
-                previewMat.color = color;
-
-                mats[i] = previewMat;
-            }
-
-            renderer.materials = mats;
-        }
-
-        Collider[] colliders =
-            previewObject
-            .GetComponentsInChildren<Collider>();
-
-        foreach (Collider col in colliders)
-        {
-            col.enabled = false;
-        }
+        Destroy(previewObject);
     }
 
-    void UpdatePreviewPosition()
-    {
-        if (previewObject == null)
-            return;
+    if (selectedAsset == null)
+        return;
 
-        if (!GetMouseGridPosition(
-            out Vector3Int gridPos))
+    previewObject =
+        Instantiate(
+            selectedAsset.prefab
+        );
+
+    previewObject.name =
+        "PlacementPreview";
+
+    previewObject.transform.rotation =
+        GetPlacementRotation();
+
+    Renderer[] renderers =
+        previewObject
+        .GetComponentsInChildren<Renderer>();
+
+    foreach (Renderer renderer in renderers)
+    {
+        Material[] mats =
+            renderer.materials;
+
+        for (int i = 0; i < mats.Length; i++)
         {
-            previewObject.SetActive(false);
-            return;
+            Material previewMat =
+                new Material(mats[i]);
+
+            Color color =
+                previewMat.color;
+
+            color.a = 0.5f;
+
+            previewMat.color = color;
+
+            mats[i] = previewMat;
         }
 
-        previewObject.SetActive(true);
-
-        int targetHeight =
-            GetPlacementHeight(gridPos);
-
-        previewObject.transform.position =
-            new Vector3(
-                gridPos.x + 0.5f,
-                targetHeight,
-                gridPos.z + 0.5f
-            )
-            + selectedAsset.placementOffset;
+        renderer.materials = mats;
     }
 
-    void HandlePlacement()
+    Collider[] colliders =
+        previewObject
+        .GetComponentsInChildren<Collider>();
+
+    foreach (Collider col in colliders)
     {
-        if (currentTool != EditorTool.Add)
-            return;
+        col.enabled = false;
+    }
+}
 
-        if (selectedAsset == null)
-            return;
+void UpdatePreviewPosition()
+{
+    if (previewObject == null)
+        return;
 
-        // SINGLE CLICK
-        if (Input.GetMouseButtonDown(0))
-        {
-            TryPlace(false);
-        }
-
-        // HOLD DRAG
-        if (Input.GetMouseButton(0))
-        {
-            TryPlace(true);
-        }
-
-        if (!Input.GetMouseButton(0))
-        {
-            lastPlacedPosition =
-                Vector3Int.one * -9999;
-        }
+    // Hide preview while removing
+    if (currentTool == EditorTool.Remove)
+    {
+        previewObject.SetActive(false);
+        return;
     }
 
-    void TryPlace(bool dragMode)
+    if (!GetMouseGridPosition(
+        out Vector3Int gridPos))
     {
-        if (!GetMouseGridPosition(
-            out Vector3Int gridPos))
-            return;
+        previewObject.SetActive(false);
+        return;
+    }
 
-        int topHeight =
-            GetTopHeight(gridPos);
+    previewObject.SetActive(true);
 
-        int targetHeight;
+    int targetHeight =
+        GetPlacementHeight(gridPos);
 
-        // DRAG MODE
-        if (dragMode)
+    previewObject.transform.position =
+        new Vector3(
+            gridPos.x + 0.5f,
+            targetHeight,
+            gridPos.z + 0.5f
+        )
+        + selectedAsset.placementOffset;
+}
+
+void HandlePlacement()
+{
+    if (currentTool != EditorTool.Add)
+        return;
+
+    if (selectedAsset == null)
+        return;
+
+    if (Input.GetMouseButtonDown(0))
+    {
+        TryPlace(false);
+    }
+
+    if (Input.GetMouseButton(0))
+    {
+        TryPlace(true);
+    }
+
+    if (!Input.GetMouseButton(0))
+    {
+        lastPlacedPosition =
+            Vector3Int.one * -9999;
+    }
+}
+
+void HandleFill()
+{
+    if (currentTool != EditorTool.Fill)
+        return;
+
+    if (selectedAsset == null)
+        return;
+
+    if (!Input.GetMouseButtonDown(0))
+        return;
+
+    if (!GetMouseGridPosition(
+        out Vector3Int startPos))
+        return;
+
+    int targetHeight =
+        GetTopHeight(startPos);
+
+    Queue<Vector3Int> queue =
+        new Queue<Vector3Int>();
+
+    HashSet<Vector3Int> visited =
+        new HashSet<Vector3Int>();
+
+    queue.Enqueue(startPos);
+
+    while (queue.Count > 0)
+    {
+        Vector3Int current =
+            queue.Dequeue();
+
+        if (visited.Contains(current))
+            continue;
+
+        visited.Add(current);
+
+        if (!gridSystem.IsInsideGrid(current))
+            continue;
+
+        int currentHeight =
+            GetTopHeight(current);
+
+        // Stop at borders / holes
+        if (currentHeight != targetHeight)
+            continue;
+
+        int placeHeight;
+
+        if (selectedAsset.placeAtGroundLevel)
         {
-            if (selectedAsset.placeAtGroundLevel)
-            {
-                targetHeight = 0;
-            }
-            else
-            {
-                targetHeight =
-                    Mathf.Max(0, topHeight);
-            }
+            placeHeight = 0;
         }
         else
         {
-            // SINGLE CLICK
-            if (selectedAsset.placeAtGroundLevel)
-            {
-                targetHeight = 0;
-            }
-            else
-            {
-                targetHeight =
-                    topHeight + 1;
-            }
+            placeHeight =
+                currentHeight + 1;
         }
 
         Vector3Int finalPos =
             new Vector3Int(
-                gridPos.x,
-                targetHeight,
-                gridPos.z
+                current.x,
+                placeHeight,
+                current.z
             );
 
-        if (finalPos == lastPlacedPosition)
-            return;
-
-        lastPlacedPosition =
-            finalPos;
-
-        if (PlacedTiles.ContainsKey(finalPos))
-            return;
-
-        GameObject obj =
-            Instantiate(
-                selectedAsset.prefab,
-
-                new Vector3(
-                    finalPos.x + 0.5f,
-                    finalPos.y,
-                    finalPos.z + 0.5f
-                )
-                + selectedAsset.placementOffset,
-
-                GetPlacementRotation()
-            );
-
-        obj.name =
-            selectedAsset.displayName;
-
-        PlacedObjectData data =
-            new PlacedObjectData();
-
-        data.assetID =
-            selectedAsset.assetID;
-
-        data.x = finalPos.x;
-        data.y = finalPos.y;
-        data.z = finalPos.z;
-
-        PlacedTiles.Add(
-            finalPos,
-            new PlacedTile(
-                obj,
-                data
-            )
-        );
-    }
-
-    int GetPlacementHeight(
-        Vector3Int gridPos)
-    {
-        int topHeight =
-            GetTopHeight(gridPos);
-
-        // HOLD SHIFT
-        if (Input.GetKey(KeyCode.LeftShift))
+        if (!PlacedTiles.ContainsKey(finalPos))
         {
-            return topHeight + 1;
+            GameObject obj =
+                Instantiate(
+                    selectedAsset.prefab,
+
+                    new Vector3(
+                        finalPos.x + 0.5f,
+                        finalPos.y,
+                        finalPos.z + 0.5f
+                    )
+                    + selectedAsset
+                        .placementOffset,
+
+                    GetPlacementRotation()
+                );
+
+            obj.name =
+                selectedAsset.displayName;
+
+            PlacedObjectData data =
+                new PlacedObjectData();
+
+            data.assetID =
+                selectedAsset.assetID;
+
+            data.x = finalPos.x;
+            data.y = finalPos.y;
+            data.z = finalPos.z;
+
+            data.rotationY = 0f;
+
+            PlacedTiles.Add(
+                finalPos,
+                new PlacedTile(
+                    obj,
+                    data
+                )
+            );
         }
 
-        // FORCE GROUND LEVEL
+        queue.Enqueue(
+            current + Vector3Int.right
+        );
+
+        queue.Enqueue(
+            current + Vector3Int.left
+        );
+
+        queue.Enqueue(
+            current + new Vector3Int(0, 0, 1)
+        );
+
+        queue.Enqueue(
+            current + new Vector3Int(0, 0, -1)
+        );
+    }
+}
+
+void TryPlace(bool dragMode)
+{
+    if (!GetMouseGridPosition(
+        out Vector3Int gridPos))
+        return;
+
+    int topHeight =
+        GetTopHeight(gridPos);
+
+    int targetHeight;
+
+    if (dragMode)
+    {
+        if (selectedAsset.placeAtGroundLevel)
+        {
+            targetHeight = 0;
+        }
+        else
+        {
+            targetHeight =
+                Mathf.Max(0, topHeight);
+        }
+    }
+    else
+    {
+        targetHeight =
+            topHeight + 1;
+    }
+
+    Vector3Int finalPos =
+        new Vector3Int(
+            gridPos.x,
+            targetHeight,
+            gridPos.z
+        );
+
+    if (finalPos == lastPlacedPosition)
+        return;
+
+    lastPlacedPosition =
+        finalPos;
+
+    if (PlacedTiles.ContainsKey(finalPos))
+        return;
+
+    GameObject obj =
+        Instantiate(
+            selectedAsset.prefab,
+
+            new Vector3(
+                finalPos.x + 0.5f,
+                finalPos.y,
+                finalPos.z + 0.5f
+            )
+            + selectedAsset.placementOffset,
+
+            GetPlacementRotation()
+        );
+
+    obj.name =
+        selectedAsset.displayName;
+
+    PlacedObjectData data =
+        new PlacedObjectData();
+
+    data.assetID =
+        selectedAsset.assetID;
+
+    data.x = finalPos.x;
+    data.y = finalPos.y;
+    data.z = finalPos.z;
+
+    data.rotationY = 0f;
+
+    PlacedTiles.Add(
+        finalPos,
+        new PlacedTile(
+            obj,
+            data
+        )
+    );
+}
+
+int GetPlacementHeight(
+    Vector3Int gridPos)
+{
+    int topHeight =
+        GetTopHeight(gridPos);
+
+    if (Input.GetKey(KeyCode.LeftShift))
+    {
+        return topHeight + 1;
+    }
+
+    if (dragPlacementMode)
+    {
         if (
             selectedAsset != null &&
             selectedAsset.placeAtGroundLevel
@@ -310,188 +434,185 @@ public class GridPlacementSystem : MonoBehaviour
             return 0;
         }
 
-        // TERRAIN PAINT MODE
-        if (dragPlacementMode)
+        if (topHeight >= 0)
         {
-            if (topHeight >= 0)
-            {
-                return topHeight;
-            }
-
-            return 0;
+            return topHeight;
         }
 
-        // STACKING
-        return topHeight + 1;
+        return 0;
     }
 
-    void HandleRemove()
+    return topHeight + 1;
+}
+
+void HandleRemove()
+{
+    if (currentTool != EditorTool.Remove)
+        return;
+
+    if (!GetMouseGridPosition(
+        out Vector3Int gridPos))
+        return;
+
+    Vector3Int? target =
+        GetTopTile(gridPos);
+
+    HighlightRemoveTarget(target);
+
+    if (!Input.GetMouseButtonDown(0))
+        return;
+
+    if (target == null)
+        return;
+
+    PlacedTile tile =
+        PlacedTiles[target.Value];
+
+    Destroy(tile.instance);
+
+    PlacedTiles.Remove(
+        target.Value
+    );
+}
+
+void HighlightRemoveTarget(
+    Vector3Int? target)
+{
+    foreach (var pair in PlacedTiles)
     {
-        if (currentTool != EditorTool.Remove)
-            return;
-
-        if (!GetMouseGridPosition(
-            out Vector3Int gridPos))
-            return;
-
-        Vector3Int? target =
-            GetTopTile(gridPos);
-
-        HighlightRemoveTarget(target);
-
-        if (!Input.GetMouseButtonDown(0))
-            return;
-
-        if (target == null)
-            return;
-
-        PlacedTile tile =
-            PlacedTiles[target.Value];
-
-        Destroy(tile.instance);
-
-        PlacedTiles.Remove(
-            target.Value
-        );
-    }
-
-    void HighlightRemoveTarget(
-        Vector3Int? target)
-    {
-        foreach (var pair in PlacedTiles)
-        {
-            Renderer[] renderers =
-                pair.Value.instance
-                .GetComponentsInChildren<Renderer>();
-
-            foreach (Renderer r in renderers)
-            {
-                foreach (Material m in r.materials)
-                {
-                    m.color = Color.white;
-                }
-            }
-        }
-
-        if (target == null)
-            return;
-
-        Renderer[] targetRenderers =
-            PlacedTiles[target.Value]
-            .instance
+        Renderer[] renderers =
+            pair.Value.instance
             .GetComponentsInChildren<Renderer>();
 
-        foreach (Renderer r in targetRenderers)
+        foreach (Renderer r in renderers)
         {
             foreach (Material m in r.materials)
             {
-                m.color =
-                    new Color(
-                        1f,
-                        0.5f,
-                        0.5f
-                    );
+                m.color = Color.white;
             }
         }
     }
 
-    bool GetMouseGridPosition(
-        out Vector3Int gridPos)
+    if (target == null)
+        return;
+
+    Renderer[] targetRenderers =
+        PlacedTiles[target.Value]
+        .instance
+        .GetComponentsInChildren<Renderer>();
+
+    foreach (Renderer r in targetRenderers)
     {
-        gridPos = Vector3Int.zero;
-
-        Ray ray =
-            sceneCamera.ScreenPointToRay(
-                Input.mousePosition
-            );
-
-        Plane plane =
-            new Plane(
-                Vector3.up,
-                Vector3.zero
-            );
-
-        if (!plane.Raycast(
-            ray,
-            out float enter))
+        foreach (Material m in r.materials)
         {
-            return false;
+            m.color =
+                new Color(
+                    1f,
+                    0.5f,
+                    0.5f
+                );
         }
+    }
+}
 
-        Vector3 hitPoint =
-            ray.GetPoint(enter);
+bool GetMouseGridPosition(
+    out Vector3Int gridPos)
+{
+    gridPos = Vector3Int.zero;
 
-        int x =
-            Mathf.FloorToInt(hitPoint.x);
+    Ray ray =
+        sceneCamera.ScreenPointToRay(
+            Input.mousePosition
+        );
 
-        int z =
-            Mathf.FloorToInt(hitPoint.z);
+    Plane plane =
+        new Plane(
+            Vector3.up,
+            Vector3.zero
+        );
 
-        gridPos =
-            new Vector3Int(
-                x,
-                0,
-                z
-            );
-
-        return gridSystem
-            .IsInsideGrid(gridPos);
+    if (!plane.Raycast(
+        ray,
+        out float enter))
+    {
+        return false;
     }
 
-    int GetTopHeight(
-        Vector3Int gridPos)
+    Vector3 hitPoint =
+        ray.GetPoint(enter);
+
+    int x =
+        Mathf.FloorToInt(hitPoint.x);
+
+    int z =
+        Mathf.FloorToInt(hitPoint.z);
+
+    gridPos =
+        new Vector3Int(
+            x,
+            0,
+            z
+        );
+
+    return gridSystem
+        .IsInsideGrid(gridPos);
+}
+
+int GetTopHeight(
+    Vector3Int gridPos)
+{
+    int highest = -1;
+
+    foreach (var pair in PlacedTiles)
     {
-        int highest = -1;
+        Vector3Int pos =
+            pair.Key;
 
-        foreach (var pair in PlacedTiles)
+        if (pos.x == gridPos.x &&
+            pos.z == gridPos.z)
         {
-            Vector3Int pos =
-                pair.Key;
-
-            if (pos.x == gridPos.x &&
-                pos.z == gridPos.z)
+            if (pos.y > highest)
             {
-                if (pos.y > highest)
-                {
-                    highest = pos.y;
-                }
+                highest = pos.y;
             }
         }
-
-        return highest;
     }
 
-    Vector3Int? GetTopTile(
-        Vector3Int gridPos)
+    return highest;
+}
+
+Vector3Int? GetTopTile(
+    Vector3Int gridPos)
+{
+    int highest = -1;
+
+    Vector3Int? result = null;
+
+    foreach (var pair in PlacedTiles)
     {
-        int highest = -1;
+        Vector3Int pos =
+            pair.Key;
 
-        Vector3Int? result = null;
-
-        foreach (var pair in PlacedTiles)
+        if (pos.x == gridPos.x &&
+            pos.z == gridPos.z)
         {
-            Vector3Int pos =
-                pair.Key;
-
-            if (pos.x == gridPos.x &&
-                pos.z == gridPos.z)
+            if (pos.y > highest)
             {
-                if (pos.y > highest)
-                {
-                    highest = pos.y;
-                    result = pos;
-                }
+                highest = pos.y;
+                result = pos;
             }
         }
-
-        return result;
     }
 
-    void HidePreview()
+    return result;
+}
+
+void HidePreview()
+{
+    if (previewObject != null)
     {
-        if (previewObject != null)
-        {
-            previewObject.SetActive(false);
-        }
+        previewObject.SetActive(false);
     }
+}
+
 }

@@ -31,7 +31,7 @@ public class PlaceableAsset
 
     public bool placeAtGroundLevel = true;
 
-    [Header("Surface Type")]
+    [Header("Surface")]
     public bool isQuad = false;
 
     [Header("Gameplay")]

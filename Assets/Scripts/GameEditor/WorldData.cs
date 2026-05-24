@@ -1,7 +1,6 @@
-using System;
 using System.Collections.Generic;
 
-[Serializable]
+[System.Serializable]
 public class WorldData
 {
     public int chunkSize;

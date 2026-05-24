@@ -57,6 +57,10 @@ public class WorldExporter : MonoBehaviour
             PlacedTile tile =
                 pair.Value;
 
+            // FUTURE ROTATION SUPPORT
+            tile.data.rotationY =
+                tile.instance.transform.eulerAngles.y;
+
             int chunkX =
                 Mathf.FloorToInt(
                     (float)position.x /

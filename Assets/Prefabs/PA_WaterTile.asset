@@ -12,9 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a798df8f12d9e044bab2a35944a393f, type: 3}
   m_Name: PA_WaterTile
   m_EditorClassIdentifier: Assembly-CSharp::PlaceableAsset
-  assetID: 
-  displayName: 
-  description: 
-  category: 
-  prefab: {fileID: 0}
-  previewTexture: {fileID: 0}
+  assetID: water_tile
+  displayName: Water Tile
+  description: Animated Water?!
+  category: Terrain
+  prefab: {fileID: 6952317169795723404, guid: 577476992ad7c9b449f77926924e9093, type: 3}
+  previewTexture: {fileID: 2800000, guid: ffc1830ad4cdef9468ff1125f521ec9e, type: 3}
+  placementRotation: {x: 0, y: 0, z: 0}
+  placementOffset: {x: 0, y: 0, z: 0}
+  placeAtGroundLevel: 1
+  isQuad: 1
+  blocksMovement: 1
+  isWater: 1

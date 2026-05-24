@@ -1,6 +1,5 @@
 using UnityEngine;
 
-[System.Serializable]
 public class PlacedTile
 {
     public GameObject instance;
@@ -9,8 +8,7 @@ public class PlacedTile
 
     public PlacedTile(
         GameObject instance,
-        PlacedObjectData data
-    )
+        PlacedObjectData data)
     {
         this.instance = instance;
         this.data = data;

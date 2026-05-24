@@ -137,13 +137,123 @@ public class RuntimeEditorUI : MonoBehaviour
             panel.transform
         );
 
+        CreateToolButtons(
+            panel.transform
+        );
+
         float currentY =
-            -50f;
+            -100f;
 
         BuildPalette(
             panel.transform,
             ref currentY
         );
+    }
+
+    void CreateToolButtons(
+        Transform parent)
+    {
+        CreateToolButton(
+            parent,
+            "Add",
+            GridPlacementSystem.EditorTool.Add,
+            new Vector2(20, -50)
+        );
+
+        CreateToolButton(
+            parent,
+            "Remove",
+            GridPlacementSystem.EditorTool.Remove,
+            new Vector2(130, -50)
+        );
+
+        CreateToolButton(
+            parent,
+            "Fill",
+            GridPlacementSystem.EditorTool.Fill,
+            new Vector2(240, -50)
+        );
+    }
+
+    void CreateToolButton(
+        Transform parent,
+        string label,
+        GridPlacementSystem.EditorTool tool,
+        Vector2 pos)
+    {
+        GameObject buttonObj =
+            CreateUIObject(
+                label + "Button",
+                parent
+            );
+
+        RectTransform rect =
+            buttonObj.GetComponent<
+                RectTransform>();
+
+        rect.anchorMin =
+            new Vector2(0, 1);
+
+        rect.anchorMax =
+            new Vector2(0, 1);
+
+        rect.pivot =
+            new Vector2(0, 1);
+
+        rect.sizeDelta =
+            new Vector2(100, 35);
+
+        rect.anchoredPosition =
+            pos;
+
+        Image bg =
+            buttonObj.AddComponent<
+                Image>();
+
+        bg.color =
+            new Color(
+                0.2f,
+                0.2f,
+                0.2f,
+                1f
+            );
+
+        Button button =
+            buttonObj.AddComponent<
+                Button>();
+
+        TMP_Text text =
+            CreateText(
+                buttonObj.transform,
+                label,
+                18
+            );
+
+        text.alignment =
+            TextAlignmentOptions.Center;
+
+        RectTransform textRect =
+            text.GetComponent<
+                RectTransform>();
+
+        textRect.anchorMin =
+            Vector2.zero;
+
+        textRect.anchorMax =
+            Vector2.one;
+
+        textRect.offsetMin =
+            Vector2.zero;
+
+        textRect.offsetMax =
+            Vector2.zero;
+
+        button.onClick
+            .AddListener(() =>
+        {
+            placementSystem.currentTool =
+                tool;
+        });
     }
 
     void BuildPalette(
@@ -307,8 +417,7 @@ public class RuntimeEditorUI : MonoBehaviour
             );
 
         text.alignment =
-            TextAlignmentOptions
-                .Center;
+            TextAlignmentOptions.Center;
 
         RectTransform textRect =
             text.GetComponent<
@@ -524,8 +633,7 @@ public class RuntimeEditorUI : MonoBehaviour
             );
 
         text.alignment =
-            TextAlignmentOptions
-                .Bottom;
+            TextAlignmentOptions.Bottom;
 
         RectTransform textRect =
             text.GetComponent<

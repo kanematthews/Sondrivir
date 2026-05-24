@@ -598,6 +598,7 @@ MonoBehaviour:
   assets:
   - {fileID: 11400000, guid: 206438da636092e41a27b5c7ac0285a6, type: 2}
   - {fileID: 11400000, guid: 32bcc797fd58491438acb1756e7c9440, type: 2}
+  - {fileID: 11400000, guid: f726670d46c17b34182b9b1d425c15fc, type: 2}
   panelWidth: 340
   panelPadding: 10
   categorySpacing: 20
