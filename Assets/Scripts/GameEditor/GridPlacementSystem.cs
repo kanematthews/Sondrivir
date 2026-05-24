@@ -32,6 +32,8 @@ public class GridPlacementSystem : MonoBehaviour
     private Vector3Int lastPlacedPosition =
         Vector3Int.one * -9999;
 
+    private bool dragPlacementMode;
+
     void Update()
     {
         if (!gridSystem.GridGenerated)
@@ -129,7 +131,7 @@ public class GridPlacementSystem : MonoBehaviour
         previewObject.SetActive(true);
 
         int targetHeight =
-            GetTopHeight(gridPos) + 1;
+            GetPlacementHeight(gridPos);
 
         previewObject.transform.position =
             new Vector3(
@@ -147,10 +149,17 @@ public class GridPlacementSystem : MonoBehaviour
         if (selectedAsset == null)
             return;
 
+        if (Input.GetMouseButtonDown(0))
+        {
+            dragPlacementMode = true;
+        }
+
         if (!Input.GetMouseButton(0))
         {
             lastPlacedPosition =
                 Vector3Int.one * -9999;
+
+            dragPlacementMode = false;
 
             return;
         }
@@ -160,7 +169,7 @@ public class GridPlacementSystem : MonoBehaviour
             return;
 
         int targetHeight =
-            GetTopHeight(gridPos) + 1;
+            GetPlacementHeight(gridPos);
 
         Vector3Int finalPos =
             new Vector3Int(
@@ -182,9 +191,9 @@ public class GridPlacementSystem : MonoBehaviour
             Instantiate(
                 selectedAsset.prefab,
                 new Vector3(
-                    gridPos.x + 0.5f,
+                    finalPos.x + 0.5f,
                     finalPos.y,
-                    gridPos.z + 0.5f
+                    finalPos.z + 0.5f
                 ),
                 Quaternion.identity
             );
@@ -209,6 +218,29 @@ public class GridPlacementSystem : MonoBehaviour
                 data
             )
         );
+    }
+
+    int GetPlacementHeight(
+        Vector3Int gridPos)
+    {
+        int topHeight =
+            GetTopHeight(gridPos);
+
+        // HOLDING MOUSE =
+        // terrain painting mode
+        if (dragPlacementMode)
+        {
+            if (topHeight >= 0)
+            {
+                return topHeight;
+            }
+
+            return 0;
+        }
+
+        // SINGLE CLICK =
+        // intentional stacking
+        return topHeight + 1;
     }
 
     void HandleRemove()

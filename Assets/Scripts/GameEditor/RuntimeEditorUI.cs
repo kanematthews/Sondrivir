@@ -6,8 +6,6 @@ using TMPro;
 public class RuntimeEditorUI : MonoBehaviour
 {
     [Header("References")]
-    public GridSystem gridSystem;
-
     public GridPlacementSystem placementSystem;
 
     public WorldExporter worldExporter;
@@ -16,9 +14,26 @@ public class RuntimeEditorUI : MonoBehaviour
     public List<PlaceableAsset> assets =
         new List<PlaceableAsset>();
 
-    private RectTransform palettePanel;
+    [Header("UI")]
+    public float panelWidth = 360f;
 
-    private bool paletteExpanded = true;
+    public float panelPadding = 10f;
+
+    public float categorySpacing = 20f;
+
+    public float buttonSpacing = 8f;
+
+    public Vector2 buttonSize =
+        new Vector2(150, 80);
+
+    private RectTransform panelRect;
+
+    private bool paletteExpanded =
+        true;
+
+    private Dictionary<string, bool>
+        categoryExpanded =
+        new Dictionary<string, bool>();
 
     void Start()
     {
@@ -81,23 +96,9 @@ public class RuntimeEditorUI : MonoBehaviour
                 parent
             );
 
-        palettePanel =
+        panelRect =
             panel.GetComponent<
                 RectTransform>();
-
-        Image panelImage =
-            panel.AddComponent<Image>();
-
-        panelImage.color =
-            new Color(
-                0.12f,
-                0.12f,
-                0.12f,
-                0.96f
-            );
-
-        RectTransform panelRect =
-            palettePanel;
 
         panelRect.anchorMin =
             new Vector2(1, 0);
@@ -110,7 +111,7 @@ public class RuntimeEditorUI : MonoBehaviour
 
         panelRect.sizeDelta =
             new Vector2(
-                340,
+                panelWidth,
                 0
             );
 
@@ -120,196 +121,114 @@ public class RuntimeEditorUI : MonoBehaviour
                 0
             );
 
-        Button collapseButton =
-            CreateButton(
-                panel.transform,
-                ">",
-                new Vector2(
-                    30,
-                    30
-                ),
-                new Vector2(
-                    0,
-                    1
-                ),
-                new Vector2(
-                    0,
-                    1
-                ),
-                new Vector2(
-                    5,
-                    -5
-                )
-            );
-
-        collapseButton
-            .onClick
-            .AddListener(
-                TogglePalette
-            );
-
-        GameObject scrollObj =
-            CreateUIObject(
-                "ScrollView",
-                panel.transform
-            );
-
-        RectTransform scrollRect =
-            scrollObj.GetComponent<
-                RectTransform>();
-
-        scrollRect.anchorMin =
-            new Vector2(0, 0);
-
-        scrollRect.anchorMax =
-            new Vector2(1, 1);
-
-        scrollRect.offsetMin =
-            new Vector2(
-                10,
-                10
-            );
-
-        scrollRect.offsetMax =
-            new Vector2(
-                -10,
-                -40
-            );
-
-        ScrollRect sr =
-            scrollObj.AddComponent<
-                ScrollRect>();
-
-        sr.horizontal = false;
-
-        Image scrollBg =
-            scrollObj.AddComponent<
+        Image bg =
+            panel.AddComponent<
                 Image>();
 
-        scrollBg.color =
+        bg.color =
             new Color(
-                0.15f,
-                0.15f,
-                0.15f,
+                0.08f,
+                0.08f,
+                0.08f,
                 0.95f
             );
 
-        GameObject viewport =
-            CreateUIObject(
-                "Viewport",
-                scrollObj.transform
-            );
+        CreateCollapseButton(
+            panel.transform
+        );
 
-        RectTransform viewportRect =
-            viewport.GetComponent<
-                RectTransform>();
-
-        viewportRect.anchorMin =
-            Vector2.zero;
-
-        viewportRect.anchorMax =
-            Vector2.one;
-
-        viewportRect.offsetMin =
-            Vector2.zero;
-
-        viewportRect.offsetMax =
-            Vector2.zero;
-
-        Image viewportImage =
-            viewport.AddComponent<
-                Image>();
-
-        viewportImage.color =
-            new Color(
-                1,
-                1,
-                1,
-                0.001f
-            );
-
-        Mask mask =
-            viewport.AddComponent<
-                Mask>();
-
-        mask.showMaskGraphic =
-            false;
-
-        GameObject content =
-            CreateUIObject(
-                "Content",
-                viewport.transform
-            );
-
-        RectTransform contentRect =
-            content.GetComponent<
-                RectTransform>();
-
-        contentRect.anchorMin =
-            new Vector2(0, 1);
-
-        contentRect.anchorMax =
-            new Vector2(1, 1);
-
-        contentRect.pivot =
-            new Vector2(
-                0.5f,
-                1
-            );
-
-        contentRect.anchoredPosition =
-            Vector2.zero;
-
-        VerticalLayoutGroup layout =
-            content.AddComponent<
-                VerticalLayoutGroup>();
-
-        layout.spacing = 8;
-
-        layout.padding =
-            new RectOffset(
-                5,
-                5,
-                5,
-                5
-            );
-
-        layout.childAlignment =
-            TextAnchor.UpperCenter;
-
-        layout.childControlHeight =
-            true;
-
-        layout.childControlWidth =
-            true;
-
-        layout.childForceExpandHeight =
-            false;
-
-        layout.childForceExpandWidth =
-            true;
-
-        ContentSizeFitter fitter =
-            content.AddComponent<
-                ContentSizeFitter>();
-
-        fitter.verticalFit =
-            ContentSizeFitter
-                .FitMode
-                .PreferredSize;
-
-        sr.viewport =
-            viewportRect;
-
-        sr.content =
-            contentRect;
-
-        BuildCategories(
-            content.transform
+        BuildPalette(
+            panel.transform
         );
     }
 
-    void BuildCategories(
+    void CreateCollapseButton(
+        Transform parent)
+    {
+        GameObject buttonObj =
+            CreateUIObject(
+                "CollapseButton",
+                parent
+            );
+
+        RectTransform rect =
+            buttonObj.GetComponent<
+                RectTransform>();
+
+        rect.anchorMin =
+            new Vector2(0, 1);
+
+        rect.anchorMax =
+            new Vector2(0, 1);
+
+        rect.pivot =
+            new Vector2(
+                0,
+                1
+            );
+
+        rect.sizeDelta =
+            new Vector2(
+                30,
+                30
+            );
+
+        rect.anchoredPosition =
+            new Vector2(
+                5,
+                -5
+            );
+
+        Image bg =
+            buttonObj.AddComponent<
+                Image>();
+
+        bg.color =
+            new Color(
+                0.2f,
+                0.2f,
+                0.2f,
+                1f
+            );
+
+        Button button =
+            buttonObj.AddComponent<
+                Button>();
+
+        TMP_Text text =
+            CreateText(
+                buttonObj.transform,
+                ">",
+                22
+            );
+
+        text.alignment =
+            TextAlignmentOptions
+                .Center;
+
+        RectTransform textRect =
+            text.GetComponent<
+                RectTransform>();
+
+        textRect.anchorMin =
+            Vector2.zero;
+
+        textRect.anchorMax =
+            Vector2.one;
+
+        textRect.offsetMin =
+            Vector2.zero;
+
+        textRect.offsetMax =
+            Vector2.zero;
+
+        button.onClick
+            .AddListener(
+                TogglePalette
+            );
+    }
+
+    void BuildPalette(
         Transform parent)
     {
         Dictionary<
@@ -338,6 +257,19 @@ public class RuntimeEditorUI : MonoBehaviour
                     new List<
                         PlaceableAsset>()
                 );
+
+                if (
+                    !categoryExpanded
+                    .ContainsKey(
+                        asset.category
+                    )
+                )
+                {
+                    categoryExpanded.Add(
+                        asset.category,
+                        true
+                    );
+                }
             }
 
             categories[
@@ -345,155 +277,182 @@ public class RuntimeEditorUI : MonoBehaviour
             ].Add(asset);
         }
 
+        float currentY =
+            -100f;
+
         foreach (
             var category
             in categories
         )
         {
-            CreateCategory(
+            CreateCategoryHeader(
                 parent,
                 category.Key,
-                category.Value
+                ref currentY
             );
+
+            if (
+                !categoryExpanded[
+                    category.Key
+                ]
+            )
+            {
+                currentY -=
+                    categorySpacing;
+
+                continue;
+            }
+
+            int column = 0;
+
+            int row = 0;
+
+            foreach (
+                PlaceableAsset asset
+                in category.Value
+            )
+            {
+                CreateAssetButton(
+                    parent,
+                    asset,
+                    column,
+                    row,
+                    currentY
+                );
+
+                column++;
+
+                if (column > 1)
+                {
+                    column = 0;
+                    row++;
+                }
+            }
+
+            currentY -=
+                ((row + 1)
+                * (buttonSize.y + buttonSpacing));
+
+            currentY -=
+                categorySpacing;
         }
     }
 
-    void CreateCategory(
+    void CreateCategoryHeader(
         Transform parent,
         string categoryName,
-        List<PlaceableAsset>
-            categoryAssets)
+        ref float currentY)
     {
-        GameObject category =
+        GameObject header =
             CreateUIObject(
-                categoryName,
+                categoryName + "_Header",
                 parent
             );
 
-        LayoutElement layout =
-            category.AddComponent<
-                LayoutElement>();
+        RectTransform rect =
+            header.GetComponent<
+                RectTransform>();
 
-        layout.preferredHeight =
-            40 +
-            (categoryAssets.Count * 90);
+        rect.anchorMin =
+            new Vector2(0, 1);
 
-        VerticalLayoutGroup group =
-            category.AddComponent<
-                VerticalLayoutGroup>();
+        rect.anchorMax =
+            new Vector2(1, 1);
 
-        group.spacing = 5;
-
-        group.childControlHeight =
-            true;
-
-        group.childControlWidth =
-            true;
-
-        group.childForceExpandHeight =
-            false;
-
-        group.childForceExpandWidth =
-            true;
-
-        bool expanded = true;
-
-        Button header =
-            CreateButton(
-                category.transform,
-                "▼ " + categoryName,
-                new Vector2(
-                    0,
-                    35
-                ),
-                new Vector2(
-                    0,
-                    1
-                ),
-                new Vector2(
-                    1,
-                    1
-                ),
-                Vector2.zero
+        rect.pivot =
+            new Vector2(
+                0.5f,
+                1
             );
 
-        GameObject content =
-            CreateUIObject(
-                "Content",
-                category.transform
+        rect.sizeDelta =
+            new Vector2(
+                -20,
+                40
             );
 
-        VerticalLayoutGroup
-            contentGroup =
-            content.AddComponent<
-                VerticalLayoutGroup>();
-
-        contentGroup.spacing =
-            5;
-
-        contentGroup
-            .childControlHeight =
-            true;
-
-        contentGroup
-            .childControlWidth =
-            true;
-
-        contentGroup
-            .childForceExpandHeight =
-            false;
-
-        contentGroup
-            .childForceExpandWidth =
-            true;
-
-        ContentSizeFitter
-            contentFit =
-            content.AddComponent<
-                ContentSizeFitter>();
-
-        contentFit.verticalFit =
-            ContentSizeFitter
-                .FitMode
-                .PreferredSize;
-
-        header.onClick
-            .AddListener(() =>
-        {
-            expanded =
-                !expanded;
-
-            content.SetActive(
-                expanded
+        rect.anchoredPosition =
+            new Vector2(
+                0,
+                currentY
             );
 
-            TMP_Text txt =
-                header
-                .GetComponentInChildren<
-                    TMP_Text>();
+        Image bg =
+            header.AddComponent<
+                Image>();
 
-            txt.text =
+        bg.color =
+            new Color(
+                0.16f,
+                0.16f,
+                0.16f,
+                1f
+            );
+
+        Button button =
+            header.AddComponent<
+                Button>();
+
+        bool expanded =
+            categoryExpanded[
+                categoryName
+            ];
+
+        TMP_Text text =
+            CreateText(
+                header.transform,
                 (expanded
                     ? "▼ "
                     : "▶ ")
-                + categoryName;
+                + categoryName,
+                24
+            );
+
+        text.alignment =
+            TextAlignmentOptions
+                .MidlineLeft;
+
+        RectTransform textRect =
+            text.GetComponent<
+                RectTransform>();
+
+        textRect.anchorMin =
+            Vector2.zero;
+
+        textRect.anchorMax =
+            Vector2.one;
+
+        textRect.offsetMin =
+            new Vector2(
+                10,
+                0
+            );
+
+        textRect.offsetMax =
+            Vector2.zero;
+
+        button.onClick
+            .AddListener(() =>
+        {
+            categoryExpanded[
+                categoryName
+            ] =
+                !categoryExpanded[
+                    categoryName
+                ];
+
+            RebuildPalette();
         });
 
-        foreach (
-            PlaceableAsset asset
-            in categoryAssets
-        )
-        {
-            CreateAssetButton(
-                content.transform,
-                asset
-            );
-        }
+        currentY -= 50f;
     }
 
     void CreateAssetButton(
         Transform parent,
-        PlaceableAsset asset)
+        PlaceableAsset asset,
+        int column,
+        int row,
+        float startY)
     {
         GameObject buttonObj =
             CreateUIObject(
@@ -505,21 +464,38 @@ public class RuntimeEditorUI : MonoBehaviour
             buttonObj.GetComponent<
                 RectTransform>();
 
-        rect.sizeDelta =
+        rect.anchorMin =
+            new Vector2(0, 1);
+
+        rect.anchorMax =
+            new Vector2(0, 1);
+
+        rect.pivot =
             new Vector2(
-                300,
-                80
+                0,
+                1
             );
 
-        LayoutElement layout =
-            buttonObj.AddComponent<
-                LayoutElement>();
+        float x =
+            panelPadding +
+            (column
+            * (buttonSize.x
+            + buttonSpacing));
 
-        layout.preferredHeight =
-            80;
+        float y =
+            startY -
+            (row
+            * (buttonSize.y
+            + buttonSpacing));
 
-        layout.minHeight =
-            80;
+        rect.anchoredPosition =
+            new Vector2(
+                x,
+                y
+            );
+
+        rect.sizeDelta =
+            buttonSize;
 
         Image bg =
             buttonObj.AddComponent<
@@ -527,9 +503,9 @@ public class RuntimeEditorUI : MonoBehaviour
 
         bg.color =
             new Color(
-                0.18f,
-                0.18f,
-                0.18f,
+                0.2f,
+                0.2f,
+                0.2f,
                 1f
             );
 
@@ -550,25 +526,19 @@ public class RuntimeEditorUI : MonoBehaviour
         previewRect.anchorMin =
             new Vector2(
                 0,
-                0.5f
+                1
             );
 
         previewRect.anchorMax =
             new Vector2(
                 0,
-                0.5f
+                1
             );
 
         previewRect.pivot =
             new Vector2(
                 0,
-                0.5f
-            );
-
-        previewRect.anchoredPosition =
-            new Vector2(
-                8,
-                0
+                1
             );
 
         previewRect.sizeDelta =
@@ -577,230 +547,69 @@ public class RuntimeEditorUI : MonoBehaviour
                 64
             );
 
-        RawImage rawImage =
+        previewRect.anchoredPosition =
+            new Vector2(
+                8,
+                -8
+            );
+
+        RawImage image =
             preview.AddComponent<
                 RawImage>();
 
-        rawImage.color =
-            Color.white;
-
-        if (
-            asset.previewTexture
-            != null
-        )
-        {
-            rawImage.texture =
-                asset.previewTexture;
-        }
-        else
-        {
-            rawImage.texture =
-                Texture2D
-                    .grayTexture;
-        }
-
-        GameObject nameObj =
-            CreateUIObject(
-                "NameText",
-                buttonObj.transform
-            );
-
-        RectTransform nameRect =
-            nameObj.GetComponent<
-                RectTransform>();
-
-        nameRect.anchorMin =
-            new Vector2(
-                0,
-                0.5f
-            );
-
-        nameRect.anchorMax =
-            new Vector2(
-                0,
-                0.5f
-            );
-
-        nameRect.pivot =
-            new Vector2(
-                0,
-                0.5f
-            );
-
-        nameRect.anchoredPosition =
-            new Vector2(
-                85,
-                12
-            );
-
-        nameRect.sizeDelta =
-            new Vector2(
-                180,
-                30
-            );
-
-        TMP_Text nameText =
-            nameObj.AddComponent<
-                TextMeshProUGUI>();
-
-        nameText.text =
-            asset.displayName;
-
-        nameText.fontSize =
-            22;
-
-        nameText.color =
-            Color.white;
-
-        GameObject categoryObj =
-            CreateUIObject(
-                "CategoryText",
-                buttonObj.transform
-            );
-
-        RectTransform
-            categoryRect =
-            categoryObj
-            .GetComponent<
-                RectTransform>();
-
-        categoryRect.anchorMin =
-            new Vector2(
-                0,
-                0.5f
-            );
-
-        categoryRect.anchorMax =
-            new Vector2(
-                0,
-                0.5f
-            );
-
-        categoryRect.pivot =
-            new Vector2(
-                0,
-                0.5f
-            );
-
-        categoryRect
-            .anchoredPosition =
-            new Vector2(
-                85,
-                -15
-            );
-
-        categoryRect.sizeDelta =
-            new Vector2(
-                180,
-                25
-            );
-
-        TMP_Text categoryText =
-            categoryObj
-            .AddComponent<
-                TextMeshProUGUI>();
-
-        categoryText.text =
-            asset.category;
-
-        categoryText.fontSize =
-            18;
-
-        categoryText.color =
-            Color.gray;
-
-        button.onClick
-            .AddListener(() =>
-        {
-            placementSystem
-                .selectedAsset =
-                asset;
-        });
-    }
-
-    TMP_Text CreateTMPText(
-        Transform parent,
-        string text,
-        int size)
-    {
-        GameObject obj =
-            CreateUIObject(
-                "Text",
-                parent
-            );
-
-        TMP_Text tmp =
-            obj.AddComponent<
-                TextMeshProUGUI>();
-
-        tmp.text = text;
-
-        tmp.fontSize =
-            size;
-
-        tmp.color =
-            Color.white;
-
-        return tmp;
-    }
-
-    Button CreateButton(
-        Transform parent,
-        string label,
-        Vector2 size,
-        Vector2 anchorMin,
-        Vector2 anchorMax,
-        Vector2 anchoredPos)
-    {
-        GameObject obj =
-            CreateUIObject(
-                label,
-                parent
-            );
-
-        Image image =
-            obj.AddComponent<
-                Image>();
+        image.texture =
+            asset.previewTexture != null
+            ? asset.previewTexture
+            : Texture2D.grayTexture;
 
         image.color =
-            new Color(
-                0.25f,
-                0.25f,
-                0.25f,
-                1f
+            Color.white;
+
+        GameObject label =
+            CreateUIObject(
+                "Label",
+                buttonObj.transform
             );
 
-        Button button =
-            obj.AddComponent<
-                Button>();
-
-        RectTransform rect =
-            obj.GetComponent<
+        RectTransform labelRect =
+            label.GetComponent<
                 RectTransform>();
 
-        rect.anchorMin =
-            anchorMin;
-
-        rect.anchorMax =
-            anchorMax;
-
-        rect.pivot =
+        labelRect.anchorMin =
             new Vector2(
                 0,
-                1
+                0
             );
 
-        rect.anchoredPosition =
-            anchoredPos;
+        labelRect.anchorMax =
+            new Vector2(
+                1,
+                0
+            );
 
-        rect.sizeDelta =
-            size;
+        labelRect.pivot =
+            new Vector2(
+                0.5f,
+                0
+            );
+
+        labelRect.sizeDelta =
+            new Vector2(
+                -10,
+                22
+            );
+
+        labelRect.anchoredPosition =
+            new Vector2(
+                0,
+                4
+            );
 
         TMP_Text text =
-            CreateTMPText(
-                obj.transform,
-                label,
-                22
+            CreateText(
+                label.transform,
+                asset.displayName,
+                18
             );
 
         text.alignment =
@@ -823,7 +632,47 @@ public class RuntimeEditorUI : MonoBehaviour
         textRect.offsetMax =
             Vector2.zero;
 
-        return button;
+        button.onClick
+            .AddListener(() =>
+        {
+            placementSystem
+                .selectedAsset =
+                asset;
+        });
+    }
+
+    TMP_Text CreateText(
+        Transform parent,
+        string value,
+        int size)
+    {
+        GameObject obj =
+            CreateUIObject(
+                "Text",
+                parent
+            );
+
+        TMP_Text text =
+            obj.AddComponent<
+                TextMeshProUGUI>();
+
+        text.text =
+            value;
+
+        text.fontSize =
+            size;
+
+        text.color =
+            Color.white;
+
+        text.enableWordWrapping =
+            false;
+
+        text.overflowMode =
+            TextOverflowModes
+                .Ellipsis;
+
+        return text;
     }
 
     GameObject CreateUIObject(
@@ -845,15 +694,49 @@ public class RuntimeEditorUI : MonoBehaviour
         return obj;
     }
 
+    void RebuildPalette()
+    {
+        List<GameObject> children =
+            new List<GameObject>();
+
+        foreach (
+            Transform child
+            in panelRect
+        )
+        {
+            if (
+                child.name !=
+                "CollapseButton"
+            )
+            {
+                children.Add(
+                    child.gameObject
+                );
+            }
+        }
+
+        foreach (
+            GameObject child
+            in children
+        )
+        {
+            Destroy(child);
+        }
+
+        BuildPalette(
+            panelRect
+        );
+    }
+
     void TogglePalette()
     {
         paletteExpanded =
             !paletteExpanded;
 
-        palettePanel.sizeDelta =
+        panelRect.sizeDelta =
             paletteExpanded
             ? new Vector2(
-                340,
+                panelWidth,
                 0
             )
             : new Vector2(
