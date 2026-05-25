@@ -7,13 +7,18 @@ public class EnemyStats : MonoBehaviour
     public string enemyName = "Skeleton";
 
     [Header("Stats")]
-    public int maxHealth = 100;
+    public int maxHealth = 250;
     public int currentHealth;
 
     public int damage = 5;
 
     [Header("UI")]
     public Image healthFill;
+
+    [Header("Damage Text")]
+    public GameObject damageTextPrefab;
+
+    public Transform damageTextSpawnPoint;
 
     [Header("Respawn")]
     public float respawnTime = 5f;
@@ -36,6 +41,8 @@ public class EnemyStats : MonoBehaviour
 
         UpdateHealthBar();
 
+        SpawnDamageText(amount);
+
         if (currentHealth <= 0)
         {
             Die();
@@ -48,6 +55,33 @@ public class EnemyStats : MonoBehaviour
         {
             healthFill.fillAmount =
                 (float)currentHealth / maxHealth;
+        }
+    }
+
+    void SpawnDamageText(int amount)
+    {
+        if (damageTextPrefab == null ||
+            damageTextSpawnPoint == null)
+            return;
+
+        Vector3 randomOffset =
+            new Vector3(
+                Random.Range(-0.5f, 0.5f),
+                Random.Range(0f, 0.5f),
+                0);
+
+        GameObject textObj =
+            Instantiate(
+                damageTextPrefab,
+                damageTextSpawnPoint.position + randomOffset,
+                Quaternion.identity);
+
+        DamageText damageText =
+            textObj.GetComponent<DamageText>();
+
+        if (damageText != null)
+        {
+            damageText.SetDamage(amount);
         }
     }
 

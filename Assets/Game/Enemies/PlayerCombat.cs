@@ -2,22 +2,44 @@ using UnityEngine;
 
 public class PlayerCombat : MonoBehaviour
 {
-    [Header("Combat")]
-    public int baseDamage = 10;
+    private bool autoAttacking = false;
 
-    public float attackSpeed = 1.5f;
+    private bool isAttacking = false;
 
-    private bool autoAttacking;
+    private float attackTimer = 0f;
 
-    private float nextAttackTime;
+    private Targetable currentCombatTarget;
+
+    private Animator animator;
+
+    private PlayerStats playerStats;
+
+    void Start()
+    {
+        // FIND ANIMATOR ON CHILD MODEL
+        animator =
+            GetComponentInChildren<Animator>();
+
+        // GET PLAYER STATS
+        playerStats =
+            GetComponent<PlayerStats>();
+    }
 
     void Update()
     {
         HandleInput();
 
-        if (autoAttacking)
+        if (autoAttacking && !isAttacking)
         {
-            AutoAttack();
+            attackTimer += Time.deltaTime;
+
+            // ATTACK TIMER
+            if (attackTimer >= playerStats.attackSpeed)
+            {
+                attackTimer = 0f;
+
+                PerformAttack();
+            }
         }
     }
 
@@ -26,61 +48,148 @@ public class PlayerCombat : MonoBehaviour
         // RIGHT CLICK = START AUTO ATTACK
         if (Input.GetMouseButtonDown(1))
         {
-            if (Targetable.CurrentTarget != null)
+            Ray ray =
+                Camera.main.ScreenPointToRay(
+                    Input.mousePosition
+                );
+
+            if (Physics.Raycast(ray, out RaycastHit hit))
             {
-                autoAttacking = true;
+                Targetable target =
+                    hit.collider.GetComponent<Targetable>();
 
-                CombatTargetVisual visual =
-                    Targetable.CurrentTarget
-                    .GetComponent<CombatTargetVisual>();
-
-                if (visual != null)
+                if (target != null)
                 {
-                    visual.StartPulse();
+                    currentCombatTarget = target;
+
+                    autoAttacking = true;
+
+                    attackTimer =
+                        playerStats.attackSpeed;
+
+                    target.SelectTarget();
+
+                    CombatTargetVisual visual =
+                        target.GetComponent<CombatTargetVisual>();
+
+                    if (visual != null)
+                    {
+                        visual.StartPulse();
+                    }
+
+                    Debug.Log("AUTO ATTACK STARTED");
                 }
             }
         }
     }
 
-    void AutoAttack()
+    void PerformAttack()
     {
-        if (Targetable.CurrentTarget == null)
+        if (currentCombatTarget == null)
         {
             StopAutoAttack();
             return;
         }
 
-        if (Time.time >= nextAttackTime)
+        EnemyStats enemy =
+            currentCombatTarget
+            .GetComponent<EnemyStats>();
+
+        if (enemy == null)
         {
-            EnemyStats enemy =
-                Targetable.CurrentTarget
-                .GetComponent<EnemyStats>();
-
-            if (enemy != null)
-            {
-                enemy.TakeDamage(baseDamage);
-
-                Debug.Log("Hit for " + baseDamage);
-
-                if (enemy.currentHealth <= 0)
-                {
-                    StopAutoAttack();
-                }
-            }
-
-            nextAttackTime =
-                Time.time + attackSpeed;
+            StopAutoAttack();
+            return;
         }
+
+        // CHECK RANGE
+        float distance =
+            Vector3.Distance(
+                transform.position,
+                enemy.transform.position
+            );
+
+        // TOO FAR AWAY
+        if (distance > playerStats.attackRange)
+        {
+            Debug.Log("Target out of range");
+
+            return;
+        }
+
+        isAttacking = true;
+
+        // SCALE ANIMATION SPEED
+        animator.speed =
+            1f / playerStats.attackSpeed;
+
+        // PLAY ATTACK ANIMATION
+        animator.Play("Attack", 0, 0f);
+
+        // SMALL HIT DELAY
+        Invoke(nameof(ApplyDamage), 0.25f);
+
+        // END ATTACK
+        Invoke(nameof(EndAttack), playerStats.attackSpeed);
+    }
+
+    void ApplyDamage()
+    {
+        if (currentCombatTarget == null)
+            return;
+
+        EnemyStats enemy =
+            currentCombatTarget
+            .GetComponent<EnemyStats>();
+
+        if (enemy == null)
+            return;
+
+        int damage =
+            playerStats.CalculateDamage();
+
+        enemy.TakeDamage(damage);
+
+        Debug.Log("Hit for " + damage);
+
+        // DEAD
+        if (enemy.currentHealth <= 0)
+        {
+            StopAutoAttack();
+        }
+    }
+
+    void EndAttack()
+    {
+        isAttacking = false;
+
+        // RESET ANIMATOR SPEED
+        animator.speed = 1f;
+
+        // RETURN TO IDLE
+        animator.Play("Idle");
     }
 
     public void StopAutoAttack()
     {
         autoAttacking = false;
 
-        if (Targetable.CurrentTarget != null)
+        isAttacking = false;
+
+        attackTimer = 0f;
+
+        // RESET ANIMATOR
+        if (animator != null)
+        {
+            animator.speed = 1f;
+
+            animator.Play("Idle");
+        }
+
+        // STOP TARGET PULSE
+        if (currentCombatTarget != null)
         {
             CombatTargetVisual visual =
-                Targetable.CurrentTarget
+                currentCombatTarget
                 .GetComponent<CombatTargetVisual>();
 
             if (visual != null)
@@ -88,5 +197,9 @@ public class PlayerCombat : MonoBehaviour
                 visual.StopPulse();
             }
         }
+
+        currentCombatTarget = null;
+
+        Debug.Log("AUTO ATTACK STOPPED");
     }
 }
