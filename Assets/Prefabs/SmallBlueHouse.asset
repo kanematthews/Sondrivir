@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a798df8f12d9e044bab2a35944a393f, type: 3}
+  m_Name: SmallBlueHouse
+  m_EditorClassIdentifier: Assembly-CSharp::PlaceableAsset
+  assetID: SmallBlueHouse
+  displayName: Small Blue House
+  description: Structures!
+  category: Structure
+  prefab: {fileID: 6342453355180978106, guid: 8ea9f2675f6ef6244997e48b05c21fd0, type: 3}
+  previewTexture: {fileID: 2800000, guid: 25681515cc3e9c2449a2ace8e9c033d1, type: 3}
+  placementType: 2
+  placementRotation: {x: 0, y: 0, z: 0}
+  placementOffset: {x: 0, y: 0, z: 0}
+  placeAtGroundLevel: 1
+  footprintSize: {x: 5, y: 5}
+  isQuad: 0
+  blocksMovement: 1
+  isWater: 0

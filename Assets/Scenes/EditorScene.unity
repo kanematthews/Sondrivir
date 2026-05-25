@@ -600,6 +600,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 32bcc797fd58491438acb1756e7c9440, type: 2}
   - {fileID: 11400000, guid: f726670d46c17b34182b9b1d425c15fc, type: 2}
   - {fileID: 11400000, guid: d41eccb40ee222246b69c658a4951cd3, type: 2}
+  - {fileID: 11400000, guid: 86dca97bb2e20db4e8995f42d48e3c51, type: 2}
+  - {fileID: 11400000, guid: 6f7679562fadf2f4ea46d9d0eec624fc, type: 2}
   panelWidth: 340
   panelPadding: 10
   categorySpacing: 20
@@ -764,6 +766,8 @@ MonoBehaviour:
   placementSystem: {fileID: 1656244535}
   gridSystem: {fileID: 435382330}
   exportFileName: GeneratedWorld.json
+  exportChunkOffsetX: 0
+  exportChunkOffsetZ: 0
 --- !u!4 &2031488994
 Transform:
   m_ObjectHideFlags: 0

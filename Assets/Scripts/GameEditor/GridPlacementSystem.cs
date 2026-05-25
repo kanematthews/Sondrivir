@@ -12,77 +12,68 @@ public class GridPlacementSystem : MonoBehaviour
         Resize
     }
 
-    // Which axis a resize handle controls.
     public enum ResizeHandle
     {
-        PosX,   // +X arrow  (right face)
-        NegX,   // -X arrow  (left face)
-        PosZ,   // +Z arrow  (forward face)
-        NegZ,   // -Z arrow  (back face)
-        PosY,   // +Y corner (scale up uniform)
-        NegY    // -Y corner (scale down uniform)
+        PosX,   // right  → scale X grow
+        NegX,   // left   → scale X shrink
+        PosZ,   // front  → scale Z grow
+        NegZ,   // back   → scale Z shrink
+        PosY,   // top    → scale Y grow
+        NegY    // bottom → scale Y shrink
     }
 
     [Header("References")]
     public Camera sceneCamera;
-
     public GridSystem gridSystem;
 
     [Header("Selected Asset")]
     public PlaceableAsset selectedAsset;
 
     [Header("Tools")]
-    public EditorTool currentTool =
-        EditorTool.Add;
+    public EditorTool currentTool = EditorTool.Add;
 
+    // All placed tiles keyed by their origin grid cell.
     public Dictionary<Vector3Int, PlacedTile>
         PlacedTiles =
         new Dictionary<Vector3Int, PlacedTile>();
 
-    private GameObject previewObject;
+    // Every cell covered by a multi-tile structure,
+    // mapped back to that structure's origin key so
+    // overlap checks and removal both work correctly.
+    private Dictionary<Vector3Int, Vector3Int>
+        structureFootprintCells =
+        new Dictionary<Vector3Int, Vector3Int>();
 
+    // ── placement preview ────────────────────────
+    private GameObject    previewObject;
     private PlaceableAsset lastAsset;
 
+    // Sentinel: reset at the START of every new
+    // discrete click so stacking always works.
     private Vector3Int lastPlacedPosition =
         Vector3Int.one * -9999;
 
     private bool dragPlacementMode;
 
+    // ── selection / move ─────────────────────────
     private PlacedTile selectedTile;
-
     private Vector3Int selectedTilePosition;
-
-    private bool isDraggingSelected;
-
+    private bool       isDraggingSelected;
     private GameObject movePreviewObject;
-
     private GameObject selectionOutline;
 
-    // ── Resize gizmo state ──────────────────────
-    // The tile the gizmo is currently attached to.
-    private Vector3Int? resizeTargetTile = null;
-
-    // Root GameObject that holds all handle arrows.
-    private GameObject resizeGizmoRoot = null;
-
-    // Which handle is being dragged right now.
-    private ResizeHandle? activeHandle = null;
-
-    // Mouse X position when drag started,
-    // used to compute delta.
-    private float dragStartMouseX;
-
-    // Scale of the object when drag started.
-    private Vector3 dragStartScale;
-
-    // Original (first-seen) scale per object,
-    // used as the "default" reference for the
-    // snap-to-default-once logic.
+    // ── resize gizmo ─────────────────────────────
+    private Vector3Int?   resizeTargetTile = null;
+    private GameObject    resizeGizmoRoot  = null;
+    private ResizeHandle? activeHandle     = null;
+    private float         dragStartMouseX;
+    private float         dragStartMouseY;
+    private Vector3       dragStartScale;
     private Dictionary<GameObject, Vector3>
         defaultObjectScales =
         new Dictionary<GameObject, Vector3>();
-    // ────────────────────────────────────────────
 
+    // ════════════════════════════════════════════
     void Update()
     {
         if (!gridSystem.GridGenerated)
@@ -91,43 +82,32 @@ public class GridPlacementSystem : MonoBehaviour
             return;
         }
 
-        dragPlacementMode =
-            Input.GetMouseButton(0);
+        dragPlacementMode = Input.GetMouseButton(0);
 
         UpdatePreviewAsset();
-
         UpdatePreviewPosition();
 
-        // Clear selection outline when not in
-        // Select or Remove tool.
-        if (
-            currentTool != EditorTool.Select &&
-            currentTool != EditorTool.Remove
-        )
+        if (currentTool != EditorTool.Select &&
+            currentTool != EditorTool.Remove)
         {
             DestroySelectionOutline();
         }
 
         HandlePlacement();
-
         HandleFill();
-
         HandleSelection();
-
         HandleResize();
-
         HandleRemove();
     }
 
-    // ── Preview ─────────────────────────────────
+    // ════════════════════════════════════════════
+    // PREVIEW
+    // ════════════════════════════════════════════
 
     void UpdatePreviewAsset()
     {
-        if (selectedAsset == lastAsset)
-            return;
-
+        if (selectedAsset == lastAsset) return;
         lastAsset = selectedAsset;
-
         CreatePreviewObject();
     }
 
@@ -136,18 +116,13 @@ public class GridPlacementSystem : MonoBehaviour
         if (selectedAsset == null)
             return Quaternion.identity;
 
-        Quaternion rotation =
-            Quaternion.Euler(
-                selectedAsset.placementRotation
-            );
+        Quaternion r =
+            Quaternion.Euler(selectedAsset.placementRotation);
 
         if (selectedAsset.isQuad)
-        {
-            rotation *=
-                Quaternion.Euler(90f, 0f, 0f);
-        }
+            r *= Quaternion.Euler(90f, 0f, 0f);
 
-        return rotation;
+        return r;
     }
 
     void CreatePreviewObject()
@@ -155,39 +130,35 @@ public class GridPlacementSystem : MonoBehaviour
         if (previewObject != null)
             Destroy(previewObject);
 
-        if (selectedAsset == null)
-            return;
+        if (selectedAsset == null) return;
 
-        previewObject =
-            Instantiate(selectedAsset.prefab);
-
+        previewObject = Instantiate(selectedAsset.prefab);
         previewObject.name = "PlacementPreview";
-
         previewObject.transform.rotation =
             GetPlacementRotation();
 
-        SetTransparent(previewObject, 0.5f);
+        // Structures: force preview to footprint size
+        // immediately so the ghost matches reality.
+        if (IsStructure(selectedAsset))
+            ApplyFootprintScale(previewObject, selectedAsset);
 
+        MakeTransparent(previewObject, 0.5f);
         DisableColliders(previewObject);
     }
 
     void UpdatePreviewPosition()
     {
-        if (previewObject == null)
-            return;
+        if (previewObject == null) return;
 
-        if (
-            currentTool == EditorTool.Remove ||
-            currentTool == EditorTool.Select ||
-            currentTool == EditorTool.Resize
-        )
+        if (currentTool == EditorTool.Remove  ||
+            currentTool == EditorTool.Select  ||
+            currentTool == EditorTool.Resize)
         {
             previewObject.SetActive(false);
             return;
         }
 
-        if (!GetMouseGridPosition(
-            out Vector3Int gridPos))
+        if (!GetMouseGridPosition(out Vector3Int gridPos))
         {
             previewObject.SetActive(false);
             return;
@@ -195,30 +166,167 @@ public class GridPlacementSystem : MonoBehaviour
 
         previewObject.SetActive(true);
 
-        int targetHeight =
-            GetPlacementHeight(gridPos);
+        int h = GetStackHeight(gridPos, selectedAsset);
 
         previewObject.transform.position =
-            new Vector3(
-                gridPos.x + 0.5f,
-                targetHeight,
-                gridPos.z + 0.5f
-            )
-            + selectedAsset.placementOffset;
+            GetSpawnPosition(gridPos, h, selectedAsset);
     }
 
-    // ── Placement ────────────────────────────────
+    // ════════════════════════════════════════════
+    // HEIGHT & POSITION HELPERS
+    // ════════════════════════════════════════════
+
+    // Returns the Y layer to place the NEXT object
+    // at this column.
+    // • placeAtGroundLevel = true  → always y=0
+    //   UNLESS something is already there, in which
+    //   case we stack on top (so tiles can be layered).
+    // • placeAtGroundLevel = false → always stack.
+    int GetStackHeight(
+        Vector3Int gridPos, PlaceableAsset asset)
+    {
+        int top = GetTopHeight(gridPos);
+
+        // Empty column → place at 0.
+        if (top < 0) return 0;
+
+        // Something already there → always stack.
+        return top + 1;
+    }
+
+    // World-space spawn centre for an object placed
+    // at originCell / height. Structures are offset
+    // so the prefab is centred on its footprint.
+    Vector3 GetSpawnPosition(
+        Vector3Int     originCell,
+        int            height,
+        PlaceableAsset asset)
+    {
+        if (IsStructure(asset))
+        {
+            // Centre of the footprint in XZ.
+            float cx = originCell.x +
+                       asset.footprintSize.x * 0.5f;
+            float cz = originCell.z +
+                       asset.footprintSize.y * 0.5f;
+
+            return new Vector3(cx, height, cz)
+                   + asset.placementOffset;
+        }
+
+        return new Vector3(
+                   originCell.x + 0.5f,
+                   height,
+                   originCell.z + 0.5f)
+               + asset.placementOffset;
+    }
+
+    // ════════════════════════════════════════════
+    // STRUCTURE FOOTPRINT
+    // ════════════════════════════════════════════
+
+    static bool IsStructure(PlaceableAsset asset) =>
+        asset != null &&
+        asset.placementType ==
+        PlaceableAsset.PlacementType.Structure;
+
+    // Scale the GameObject so its XZ renderer bounds
+    // exactly fill footprintSize world-units.
+    // Y is scaled proportionally to the larger axis
+    // so tall buildings don't get squashed.
+    void ApplyFootprintScale(
+        GameObject obj, PlaceableAsset asset)
+    {
+        // Measure at unit scale to get natural size.
+        Vector3 saved = obj.transform.localScale;
+        obj.transform.localScale = Vector3.one;
+
+        Bounds b = CalculateObjectBounds(obj);
+
+        obj.transform.localScale = saved;
+
+        if (b.size.x <= 0f || b.size.z <= 0f)
+            return;
+
+        float sx = asset.footprintSize.x / b.size.x;
+        float sz = asset.footprintSize.y / b.size.z;
+        float sy = Mathf.Max(sx, sz); // keep proportional
+
+        obj.transform.localScale =
+            new Vector3(sx, sy, sz);
+    }
+
+    bool CanPlaceStructure(
+        Vector3Int origin, PlaceableAsset asset)
+    {
+        for (int x = 0; x < asset.footprintSize.x; x++)
+        {
+            for (int z = 0; z < asset.footprintSize.y; z++)
+            {
+                Vector3Int cell = new Vector3Int(
+                    origin.x + x, origin.y, origin.z + z);
+
+                if (structureFootprintCells.ContainsKey(cell))
+                    return false;
+
+                if (PlacedTiles.ContainsKey(cell))
+                    return false;
+
+                if (!gridSystem.IsInsideGrid(cell))
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    void RegisterStructureFootprint(
+        Vector3Int origin, PlaceableAsset asset)
+    {
+        for (int x = 0; x < asset.footprintSize.x; x++)
+        {
+            for (int z = 0; z < asset.footprintSize.y; z++)
+            {
+                Vector3Int cell = new Vector3Int(
+                    origin.x + x, origin.y, origin.z + z);
+
+                // Cell → origin so we can find the
+                // PlacedTiles entry from any footprint cell.
+                structureFootprintCells[cell] = origin;
+            }
+        }
+    }
+
+    void UnregisterStructureFootprint(Vector3Int origin)
+    {
+        List<Vector3Int> toRemove = new List<Vector3Int>();
+
+        foreach (var pair in structureFootprintCells)
+        {
+            if (pair.Value == origin)
+                toRemove.Add(pair.Key);
+        }
+
+        foreach (Vector3Int key in toRemove)
+            structureFootprintCells.Remove(key);
+    }
+
+    // ════════════════════════════════════════════
+    // ADD TOOL
+    // Click  = stack ON TOP of whatever is there.
+    // Drag   = paint flat across the surface.
+    // ════════════════════════════════════════════
 
     void HandlePlacement()
     {
-        if (currentTool != EditorTool.Add)
-            return;
-
-        if (selectedAsset == null)
-            return;
+        if (currentTool != EditorTool.Add) return;
+        if (selectedAsset == null) return;
 
         if (Input.GetMouseButtonDown(0))
         {
+            // Reset sentinel on every new discrete
+            // click so the same column can be clicked
+            // repeatedly to build a stack.
+            lastPlacedPosition = Vector3Int.one * -9999;
             TryPlace(false);
         }
         else if (Input.GetMouseButton(0))
@@ -227,280 +335,246 @@ public class GridPlacementSystem : MonoBehaviour
         }
 
         if (!Input.GetMouseButton(0))
-        {
-            lastPlacedPosition =
-                Vector3Int.one * -9999;
-        }
+            lastPlacedPosition = Vector3Int.one * -9999;
     }
 
     void TryPlace(bool dragMode)
     {
-        if (!GetMouseGridPosition(
-            out Vector3Int gridPos))
+        if (!GetMouseGridPosition(out Vector3Int gridPos))
             return;
 
-        int topHeight = GetTopHeight(gridPos);
-
+        int top = GetTopHeight(gridPos);
         int targetHeight;
 
         if (dragMode)
         {
-            if (selectedAsset.placeAtGroundLevel)
-                targetHeight = 0;
-            else if (topHeight >= 0)
-                targetHeight = topHeight;
-            else
-                targetHeight = 0;
+            // Drag/paint: stay at the current surface,
+            // don't stack.
+            targetHeight = Mathf.Max(0, top);
         }
         else
         {
-            if (selectedAsset.placeAtGroundLevel)
-                targetHeight = 0;
-            else
-                targetHeight = topHeight + 1;
+            // Click: stack — place one layer above
+            // whatever is already here.
+            // top == -1 → empty column → y = 0.
+            targetHeight = top + 1;
         }
 
-        Vector3Int finalPos =
-            new Vector3Int(
-                gridPos.x,
-                targetHeight,
-                gridPos.z
-            );
+        Vector3Int finalPos = new Vector3Int(
+            gridPos.x, targetHeight, gridPos.z);
 
-        if (finalPos == lastPlacedPosition)
-            return;
-
+        if (finalPos == lastPlacedPosition) return;
         lastPlacedPosition = finalPos;
 
-        if (PlacedTiles.ContainsKey(finalPos))
-            return;
+        if (IsStructure(selectedAsset))
+        {
+            if (!CanPlaceStructure(finalPos, selectedAsset))
+                return;
+        }
+        else
+        {
+            if (PlacedTiles.ContainsKey(finalPos)) return;
+        }
 
-        GameObject obj =
-            Instantiate(
-                selectedAsset.prefab,
-                new Vector3(
-                    finalPos.x + 0.5f,
-                    finalPos.y,
-                    finalPos.z + 0.5f
-                )
-                + selectedAsset.placementOffset,
-                GetPlacementRotation()
-            );
+        Vector3 spawnPos =
+            GetSpawnPosition(finalPos, finalPos.y, selectedAsset);
+
+        GameObject obj = Instantiate(
+            selectedAsset.prefab,
+            spawnPos,
+            GetPlacementRotation());
 
         obj.name = selectedAsset.displayName;
 
-        PlacedObjectData data =
-            new PlacedObjectData();
+        // Structures are always scaled to their
+        // footprint so they physically fill the tiles.
+        if (IsStructure(selectedAsset))
+            ApplyFootprintScale(obj, selectedAsset);
 
-        data.assetID = selectedAsset.assetID;
-        data.x = finalPos.x;
-        data.y = finalPos.y;
-        data.z = finalPos.z;
-        data.rotationY = 0f;
+        PlacedObjectData data = new PlacedObjectData
+        {
+            assetID   = selectedAsset.assetID,
+            x         = finalPos.x,
+            y         = finalPos.y,
+            z         = finalPos.z,
+            rotationY = 0f
+        };
 
-        PlacedTiles.Add(
-            finalPos,
-            new PlacedTile(obj, data)
-        );
+        PlacedTiles.Add(finalPos, new PlacedTile(obj, data));
+
+        if (IsStructure(selectedAsset))
+            RegisterStructureFootprint(finalPos, selectedAsset);
     }
 
-    // ── Fill ─────────────────────────────────────
+    // ════════════════════════════════════════════
+    // FILL TOOL
+    // ════════════════════════════════════════════
 
     void HandleFill()
     {
-        if (currentTool != EditorTool.Fill)
+        if (currentTool != EditorTool.Fill) return;
+        if (selectedAsset == null) return;
+        if (!Input.GetMouseButtonDown(0)) return;
+
+        if (!GetMouseGridPosition(out Vector3Int startPos))
             return;
 
-        if (selectedAsset == null)
-            return;
+        int targetSurface = GetTopHeight(startPos);
 
-        if (!Input.GetMouseButtonDown(0))
-            return;
-
-        if (!GetMouseGridPosition(
-            out Vector3Int startPos))
-            return;
-
-        int targetHeight = GetTopHeight(startPos);
-
-        Queue<Vector3Int> queue =
-            new Queue<Vector3Int>();
-
-        HashSet<Vector3Int> visited =
-            new HashSet<Vector3Int>();
-
+        Queue<Vector3Int>   queue   = new Queue<Vector3Int>();
+        HashSet<Vector3Int> visited = new HashSet<Vector3Int>();
         queue.Enqueue(startPos);
 
         while (queue.Count > 0)
         {
-            Vector3Int current = queue.Dequeue();
+            Vector3Int cur = queue.Dequeue();
+            if (visited.Contains(cur)) continue;
+            visited.Add(cur);
 
-            if (visited.Contains(current))
-                continue;
+            if (!gridSystem.IsInsideGrid(cur)) continue;
+            if (GetTopHeight(cur) != targetSurface) continue;
 
-            visited.Add(current);
-
-            if (!gridSystem.IsInsideGrid(current))
-                continue;
-
-            int currentHeight =
-                GetTopHeight(current);
-
-            if (currentHeight != targetHeight)
-                continue;
-
-            int placeHeight =
-                selectedAsset.placeAtGroundLevel
-                ? 0
-                : currentHeight + 1;
-
+            int placeY = targetSurface + 1;
             Vector3Int finalPos =
-                new Vector3Int(
-                    current.x,
-                    placeHeight,
-                    current.z
-                );
+                new Vector3Int(cur.x, placeY, cur.z);
 
             if (!PlacedTiles.ContainsKey(finalPos))
             {
-                GameObject obj =
-                    Instantiate(
-                        selectedAsset.prefab,
-                        new Vector3(
-                            finalPos.x + 0.5f,
-                            finalPos.y,
-                            finalPos.z + 0.5f
-                        )
-                        + selectedAsset
-                            .placementOffset,
-                        GetPlacementRotation()
-                    );
+                Vector3 spawnPos = GetSpawnPosition(
+                    finalPos, placeY, selectedAsset);
 
-                obj.name =
-                    selectedAsset.displayName;
+                GameObject obj = Instantiate(
+                    selectedAsset.prefab,
+                    spawnPos,
+                    GetPlacementRotation());
 
-                PlacedObjectData data =
-                    new PlacedObjectData();
+                obj.name = selectedAsset.displayName;
 
-                data.assetID =
-                    selectedAsset.assetID;
-                data.x = finalPos.x;
-                data.y = finalPos.y;
-                data.z = finalPos.z;
-                data.rotationY = 0f;
+                if (IsStructure(selectedAsset))
+                    ApplyFootprintScale(obj, selectedAsset);
 
-                PlacedTiles.Add(
-                    finalPos,
-                    new PlacedTile(obj, data)
-                );
+                PlacedTiles.Add(finalPos,
+                    new PlacedTile(obj,
+                        new PlacedObjectData
+                        {
+                            assetID   = selectedAsset.assetID,
+                            x         = finalPos.x,
+                            y         = finalPos.y,
+                            z         = finalPos.z,
+                            rotationY = 0f
+                        }));
             }
 
-            queue.Enqueue(
-                current + Vector3Int.right);
-            queue.Enqueue(
-                current + Vector3Int.left);
-            queue.Enqueue(
-                current + new Vector3Int(0, 0, 1));
-            queue.Enqueue(
-                current + new Vector3Int(0, 0, -1));
+            queue.Enqueue(cur + Vector3Int.right);
+            queue.Enqueue(cur + Vector3Int.left);
+            queue.Enqueue(cur + new Vector3Int(0,0, 1));
+            queue.Enqueue(cur + new Vector3Int(0,0,-1));
         }
     }
 
-    // ── Selection / Move ─────────────────────────
+    // ════════════════════════════════════════════
+    // SELECT / MOVE TOOL
+    // Click → lifts tile, ghost follows cursor.
+    // Release → drops at new position.
+    // ════════════════════════════════════════════
 
     void HandleSelection()
     {
-        if (currentTool != EditorTool.Select)
-            return;
+        if (currentTool != EditorTool.Select) return;
 
-        if (!GetMouseGridPosition(
-            out Vector3Int gridPos))
-            return;
-
-        Vector3Int? topTile =
-            GetTopTile(gridPos);
-
-        HighlightTarget(topTile, Color.cyan);
-
-        if (Input.GetMouseButtonDown(0))
+        if (!GetMouseGridPosition(out Vector3Int gridPos))
         {
-            if (topTile == null)
-                return;
-
-            selectedTilePosition = topTile.Value;
-            selectedTile =
-                PlacedTiles[topTile.Value];
-
-            CreateSelectionOutline(
-                selectedTile.instance);
-
-            CreateMovePreview();
-
-            PlacedTiles.Remove(
-                selectedTilePosition);
-
-            selectedTile.instance.SetActive(false);
-
-            isDraggingSelected = true;
+            if (isDraggingSelected)
+                UpdateMovePreviewPosition(gridPos);
+            return;
         }
 
-        if (isDraggingSelected &&
-            movePreviewObject != null)
+        if (!isDraggingSelected)
         {
-            int topHeight = GetTopHeight(gridPos);
-            int targetHeight =
-                topHeight < 0 ? 0 : topHeight + 1;
+            Vector3Int? topTile = GetTopTile(gridPos);
+            HighlightTarget(topTile, Color.cyan);
 
-            movePreviewObject.transform.position =
-                new Vector3(
-                    gridPos.x + 0.5f,
-                    targetHeight,
-                    gridPos.z + 0.5f
-                );
+            if (Input.GetMouseButtonDown(0) &&
+                topTile != null)
+            {
+                BeginSelectDrag(topTile.Value);
+            }
+            return;
         }
+
+        UpdateMovePreviewPosition(gridPos);
 
         if (Input.GetMouseButtonUp(0))
-        {
-            if (
-                selectedTile == null ||
-                !isDraggingSelected
-            )
-                return;
+            FinishSelectDrag(gridPos);
+    }
 
-            int topHeight = GetTopHeight(gridPos);
-            int targetHeight =
-                topHeight < 0 ? 0 : topHeight + 1;
+    void BeginSelectDrag(Vector3Int tilePos)
+    {
+        selectedTilePosition = tilePos;
+        selectedTile = PlacedTiles[tilePos];
 
-            Vector3Int newPos =
-                new Vector3Int(
-                    gridPos.x,
-                    targetHeight,
-                    gridPos.z
-                );
+        PlacedTiles.Remove(tilePos);
 
-            selectedTile.instance.SetActive(true);
+        // Also free up the structure footprint cells
+        // so the drag doesn't block its own landing.
+        if (IsStructure(GetAssetForTile(selectedTile)))
+            UnregisterStructureFootprint(tilePos);
 
-            selectedTile.instance
-                .transform.position =
-                new Vector3(
-                    newPos.x + 0.5f,
-                    newPos.y,
-                    newPos.z + 0.5f
-                );
+        selectedTile.instance.SetActive(false);
 
-            selectedTile.data.x = newPos.x;
-            selectedTile.data.y = newPos.y;
-            selectedTile.data.z = newPos.z;
+        CreateMovePreview();
+        CreateSelectionOutline(movePreviewObject);
 
-            PlacedTiles.Add(newPos, selectedTile);
+        isDraggingSelected = true;
+    }
 
-            isDraggingSelected = false;
+    void UpdateMovePreviewPosition(Vector3Int gridPos)
+    {
+        if (movePreviewObject == null) return;
 
-            Destroy(movePreviewObject);
+        int top    = GetTopHeight(gridPos);
+        int height = top < 0 ? 0 : top + 1;
 
-            CreateSelectionOutline(
-                selectedTile.instance);
-        }
+        movePreviewObject.transform.position =
+            new Vector3(gridPos.x + 0.5f, height,
+                        gridPos.z + 0.5f);
+
+        if (selectionOutline != null)
+            RebuildOutlineOnTarget(movePreviewObject);
+    }
+
+    void FinishSelectDrag(Vector3Int gridPos)
+    {
+        if (selectedTile == null) return;
+
+        int top    = GetTopHeight(gridPos);
+        int height = top < 0 ? 0 : top + 1;
+
+        Vector3Int newPos =
+            new Vector3Int(gridPos.x, height, gridPos.z);
+
+        selectedTile.instance.SetActive(true);
+        selectedTile.instance.transform.position =
+            new Vector3(newPos.x + 0.5f, newPos.y,
+                        newPos.z + 0.5f);
+
+        selectedTile.data.x = newPos.x;
+        selectedTile.data.y = newPos.y;
+        selectedTile.data.z = newPos.z;
+
+        PlacedTiles.Add(newPos, selectedTile);
+
+        // Re-register footprint at new position.
+        PlaceableAsset asset =
+            GetAssetForTile(selectedTile);
+        if (IsStructure(asset))
+            RegisterStructureFootprint(newPos, asset);
+
+        isDraggingSelected = false;
+        selectedTile = null;
+
+        Destroy(movePreviewObject);
+        DestroySelectionOutline();
     }
 
     void CreateMovePreview()
@@ -508,65 +582,62 @@ public class GridPlacementSystem : MonoBehaviour
         if (movePreviewObject != null)
             Destroy(movePreviewObject);
 
-        if (selectedTile == null)
-            return;
+        if (selectedTile == null) return;
 
         movePreviewObject =
             Instantiate(selectedTile.instance);
+        movePreviewObject.SetActive(true);
 
-        SetTransparent(movePreviewObject, 0.5f);
+        MakeTransparent(movePreviewObject, 0.5f);
         DisableColliders(movePreviewObject);
     }
 
-    // ── Remove ───────────────────────────────────
+    // ════════════════════════════════════════════
+    // REMOVE TOOL
+    // ════════════════════════════════════════════
 
     void HandleRemove()
     {
-        if (currentTool != EditorTool.Remove)
+        if (currentTool != EditorTool.Remove) return;
+
+        if (!GetMouseGridPosition(out Vector3Int gridPos))
             return;
 
-        if (!GetMouseGridPosition(
-            out Vector3Int gridPos))
-            return;
-
+        // Check both normal tiles and structure cells.
         Vector3Int? target = GetTopTile(gridPos);
 
-        HighlightTarget(
-            target,
-            new Color(1f, 0.4f, 0.4f)
-        );
+        // If no direct tile, check if this cell is
+        // part of a structure footprint.
+        if (target == null &&
+            structureFootprintCells.ContainsKey(
+                new Vector3Int(gridPos.x, 0, gridPos.z)))
+        {
+            Vector3Int origin =
+                structureFootprintCells[
+                    new Vector3Int(gridPos.x, 0, gridPos.z)];
+            target = origin;
+        }
 
-        if (!Input.GetMouseButtonDown(0))
-            return;
+        HighlightTarget(target, new Color(1f, 0.4f, 0.4f));
 
-        if (target == null)
-            return;
+        if (!Input.GetMouseButtonDown(0)) return;
+        if (target == null) return;
 
-        PlacedTile tile =
-            PlacedTiles[target.Value];
+        if (!PlacedTiles.ContainsKey(target.Value)) return;
 
+        PlacedTile tile = PlacedTiles[target.Value];
+
+        UnregisterStructureFootprint(target.Value);
         Destroy(tile.instance);
         PlacedTiles.Remove(target.Value);
     }
 
-    // ── Resize gizmo ─────────────────────────────
-    //
-    // How it works:
-    //   1. Every frame in Resize mode we find the
-    //      top tile under the cursor and, if it
-    //      changed, rebuild the gizmo on that object.
-    //   2. On MouseDown we check which handle (if any)
-    //      was hit via a Raycast against the handle
-    //      colliders. We record the starting mouse X
-    //      and the object's starting scale.
-    //   3. While dragging we compute horizontal mouse
-    //      delta and apply it to the correct axis:
-    //        PosX / NegX  → localScale.x
-    //        PosZ / NegZ  → localScale.z
-    //        PosY         → localScale.x + z (uniform up)
-    //        NegY         → localScale.x + z (uniform down)
-    //   4. On MouseUp we finish the drag.
-    //   5. When the tool changes we destroy the gizmo.
+    // ════════════════════════════════════════════
+    // RESIZE TOOL  (world-space gizmo)
+    // Click tile → lock gizmo.
+    // Drag handle → scale that axis.
+    // Click empty → deselect.
+    // ════════════════════════════════════════════
 
     void HandleResize()
     {
@@ -574,401 +645,205 @@ public class GridPlacementSystem : MonoBehaviour
         {
             DestroyResizeGizmo();
             resizeTargetTile = null;
-            activeHandle = null;
+            activeHandle     = null;
             return;
         }
 
-        // ── Handle active drag ───────────────────
         if (activeHandle.HasValue)
         {
             ContinueResizeDrag();
 
             if (Input.GetMouseButtonUp(0))
-            {
                 activeHandle = null;
-            }
 
-            return; // don't re-pick while dragging
-        }
-
-        // ── Pick tile under cursor ───────────────
-        if (!GetMouseGridPosition(
-            out Vector3Int gridPos))
-        {
-            // Keep existing gizmo if cursor just
-            // left the grid briefly.
             return;
         }
 
-        Vector3Int? topTile =
-            GetTopTile(gridPos);
+        if (!GetMouseGridPosition(out Vector3Int gridPos))
+            return;
 
-        // Rebuild gizmo only when the hovered
-        // tile changes.
-        if (topTile != resizeTargetTile)
+        Vector3Int? hovered = GetTopTile(gridPos);
+
+        if (hovered.HasValue &&
+            hovered.Value != resizeTargetTile)
         {
-            resizeTargetTile = topTile;
+            HighlightSingleTile(hovered.Value, Color.yellow);
+        }
 
-            if (topTile.HasValue)
+        if (Input.GetMouseButtonDown(0))
+        {
+            if (resizeTargetTile.HasValue &&
+                TryBeginResizeDrag())
+                return;
+
+            if (hovered.HasValue)
             {
+                resizeTargetTile = hovered;
                 PlacedTile tile =
-                    PlacedTiles[topTile.Value];
-
+                    PlacedTiles[hovered.Value];
                 EnsureDefaultScale(tile.instance);
                 BuildResizeGizmo(tile.instance);
             }
             else
             {
+                resizeTargetTile = null;
                 DestroyResizeGizmo();
             }
         }
-
-        HighlightTarget(topTile, Color.yellow);
-
-        // ── Start drag on mouse down ─────────────
-        if (Input.GetMouseButtonDown(0))
-        {
-            TryBeginResizeDrag();
-        }
     }
 
-    void TryBeginResizeDrag()
+    bool TryBeginResizeDrag()
     {
-        if (resizeGizmoRoot == null)
-            return;
+        if (resizeGizmoRoot == null) return false;
 
         Ray ray = sceneCamera.ScreenPointToRay(
             Input.mousePosition);
 
-        // Check all handle children for a hit.
-        foreach (Transform child
-            in resizeGizmoRoot.transform)
+        foreach (Transform child in
+            resizeGizmoRoot.transform)
         {
             Collider col =
                 child.GetComponent<Collider>();
+            if (col == null) continue;
 
-            if (col == null)
+            if (!col.Raycast(ray, out RaycastHit _, 200f))
                 continue;
-
-            if (!col.Raycast(ray,
-                out RaycastHit hit, 100f))
-                continue;
-
-            // Found the clicked handle.
-            string n = child.name;
 
             if (!System.Enum.TryParse(
-                n, out ResizeHandle h))
+                child.name, out ResizeHandle h))
                 continue;
 
-            activeHandle = h;
+            activeHandle    = h;
+            dragStartMouseX = Input.mousePosition.x;
+            dragStartMouseY = Input.mousePosition.y;
 
-            dragStartMouseX =
-                Input.mousePosition.x;
-
-            if (
-                resizeTargetTile.HasValue &&
+            if (resizeTargetTile.HasValue &&
                 PlacedTiles.ContainsKey(
-                    resizeTargetTile.Value)
-            )
+                    resizeTargetTile.Value))
             {
                 dragStartScale =
-                    PlacedTiles[
-                        resizeTargetTile.Value
-                    ].instance
-                    .transform.localScale;
+                    PlacedTiles[resizeTargetTile.Value]
+                    .instance.transform.localScale;
             }
 
-            break;
+            return true;
         }
+
+        return false;
     }
 
     void ContinueResizeDrag()
     {
-        if (!activeHandle.HasValue)
-            return;
-
-        if (!resizeTargetTile.HasValue)
-            return;
-
+        if (!activeHandle.HasValue)     return;
+        if (!resizeTargetTile.HasValue) return;
         if (!PlacedTiles.ContainsKey(
-            resizeTargetTile.Value))
-            return;
+            resizeTargetTile.Value))    return;
 
         GameObject obj =
-            PlacedTiles[
-                resizeTargetTile.Value
-            ].instance;
+            PlacedTiles[resizeTargetTile.Value].instance;
 
-        // Pixels dragged → world units (1 unit
-        // per 100 px feels natural at typical zoom).
-        float delta =
-            (Input.mousePosition.x -
-             dragStartMouseX) / 100f;
+        float dH =
+            (Input.mousePosition.x - dragStartMouseX) / 80f;
+        float dV =
+            (Input.mousePosition.y - dragStartMouseY) / 80f;
 
-        Vector3 scale = dragStartScale;
-
-        float minSize = 0.1f;
+        const float MIN = 0.1f;
+        Vector3 s = dragStartScale;
 
         switch (activeHandle.Value)
         {
             case ResizeHandle.PosX:
+                s.x = Mathf.Max(MIN, s.x + dH); break;
             case ResizeHandle.NegX:
-                scale.x =
-                    Mathf.Max(
-                        minSize,
-                        dragStartScale.x + delta
-                    );
-                break;
-
+                s.x = Mathf.Max(MIN, s.x - dH); break;
             case ResizeHandle.PosZ:
+                s.z = Mathf.Max(MIN, s.z + dH); break;
             case ResizeHandle.NegZ:
-                scale.z =
-                    Mathf.Max(
-                        minSize,
-                        dragStartScale.z + delta
-                    );
-                break;
-
+                s.z = Mathf.Max(MIN, s.z - dH); break;
             case ResizeHandle.PosY:
-                // Diagonal up → uniform scale up.
-                float growUniform =
-                    Mathf.Max(0f, delta);
-
-                scale.x =
-                    Mathf.Max(
-                        minSize,
-                        dragStartScale.x +
-                        growUniform
-                    );
-
-                scale.z =
-                    Mathf.Max(
-                        minSize,
-                        dragStartScale.z +
-                        growUniform
-                    );
-
-                scale.y =
-                    Mathf.Max(
-                        minSize,
-                        dragStartScale.y +
-                        growUniform
-                    );
-                break;
-
+                s.y = Mathf.Max(MIN, s.y + dV); break;
             case ResizeHandle.NegY:
-                // Diagonal down → uniform scale
-                // down (delta is negative when
-                // dragging left).
-                float shrinkUniform =
-                    Mathf.Min(0f, delta);
-
-                scale.x =
-                    Mathf.Max(
-                        minSize,
-                        dragStartScale.x +
-                        shrinkUniform
-                    );
-
-                scale.z =
-                    Mathf.Max(
-                        minSize,
-                        dragStartScale.z +
-                        shrinkUniform
-                    );
-
-                scale.y =
-                    Mathf.Max(
-                        minSize,
-                        dragStartScale.y +
-                        shrinkUniform
-                    );
-                break;
+                s.y = Mathf.Max(MIN, s.y - dV); break;
         }
 
-        obj.transform.localScale = scale;
-
-        // Reposition gizmo to follow the
-        // object's new bounds.
+        obj.transform.localScale = s;
         BuildResizeGizmo(obj);
     }
 
-    // Builds (or rebuilds) the gizmo arrows
-    // around the given object.
     void BuildResizeGizmo(GameObject target)
     {
         DestroyResizeGizmo();
+        resizeGizmoRoot = new GameObject("ResizeGizmo");
 
-        resizeGizmoRoot =
-            new GameObject("ResizeGizmo");
+        Bounds  b  = GetObjectBounds(target);
+        Vector3 c  = b.center;
+        Vector3 sz = b.size;
+        float   L  = 0.55f, R = 0.07f;
 
-        Bounds bounds = GetObjectBounds(target);
-
-        Vector3 c = bounds.center;
-        Vector3 s = bounds.size;
-
-        // Arrow colours matching Unity conventions:
-        //   X → red   Z → blue   Y/uniform → white
-        float arrowLen = 0.6f;
-        float arrowRadius = 0.08f;
-
-        // +X (right)
-        CreateHandleArrow(
-            ResizeHandle.PosX,
-            c + new Vector3(s.x * 0.5f, 0f, 0f),
-            Vector3.right,
-            Color.red,
-            arrowLen,
-            arrowRadius
-        );
-
-        // -X (left)
-        CreateHandleArrow(
-            ResizeHandle.NegX,
-            c + new Vector3(-s.x * 0.5f, 0f, 0f),
-            Vector3.left,
-            Color.red,
-            arrowLen,
-            arrowRadius
-        );
-
-        // +Z (forward)
-        CreateHandleArrow(
-            ResizeHandle.PosZ,
-            c + new Vector3(0f, 0f, s.z * 0.5f),
-            Vector3.forward,
-            Color.blue,
-            arrowLen,
-            arrowRadius
-        );
-
-        // -Z (back)
-        CreateHandleArrow(
-            ResizeHandle.NegZ,
-            c + new Vector3(0f, 0f, -s.z * 0.5f),
-            Vector3.back,
-            Color.blue,
-            arrowLen,
-            arrowRadius
-        );
-
-        // +Y diagonal corner (uniform grow) —
-        // placed at top-right corner, angled up.
-        CreateHandleArrow(
-            ResizeHandle.PosY,
-            c + new Vector3(
-                s.x * 0.5f,
-                s.y * 0.5f,
-                s.z * 0.5f
-            ),
-            new Vector3(1f, 1f, 1f).normalized,
-            Color.white,
-            arrowLen,
-            arrowRadius
-        );
-
-        // -Y diagonal corner (uniform shrink) —
-        // placed at bottom-left corner, angled down.
-        CreateHandleArrow(
-            ResizeHandle.NegY,
-            c + new Vector3(
-                -s.x * 0.5f,
-                -s.y * 0.5f,
-                -s.z * 0.5f
-            ),
-            new Vector3(-1f, -1f, -1f).normalized,
-            Color.white,
-            arrowLen,
-            arrowRadius
-        );
+        MakeArrow(ResizeHandle.PosX,
+            c + new Vector3( sz.x*.5f, 0, 0),
+            Vector3.right,   Color.red,   L, R);
+        MakeArrow(ResizeHandle.NegX,
+            c + new Vector3(-sz.x*.5f, 0, 0),
+            Vector3.left,    Color.red,   L, R);
+        MakeArrow(ResizeHandle.PosZ,
+            c + new Vector3(0, 0,  sz.z*.5f),
+            Vector3.forward, Color.blue,  L, R);
+        MakeArrow(ResizeHandle.NegZ,
+            c + new Vector3(0, 0, -sz.z*.5f),
+            Vector3.back,    Color.blue,  L, R);
+        MakeArrow(ResizeHandle.PosY,
+            c + new Vector3(0,  sz.y*.5f, 0),
+            Vector3.up,      Color.green, L, R);
+        MakeArrow(ResizeHandle.NegY,
+            c + new Vector3(0, -sz.y*.5f, 0),
+            Vector3.down,    Color.green, L, R);
     }
 
-    // Creates one arrow handle: a thin cylinder
-    // shaft + a cone tip, with a trigger collider
-    // sized to be easy to click.
-    void CreateHandleArrow(
-        ResizeHandle handle,
-        Vector3 origin,
-        Vector3 direction,
-        Color color,
-        float length,
-        float radius)
+    void MakeArrow(
+        ResizeHandle handle, Vector3 origin,
+        Vector3 dir, Color color,
+        float length, float radius)
     {
         GameObject root =
             new GameObject(handle.ToString());
-
         root.transform.SetParent(
             resizeGizmoRoot.transform, false);
-
         root.transform.position = origin;
-
-        // Rotation so the cylinder's local Y
-        // points along 'direction'.
         root.transform.rotation =
-            Quaternion.FromToRotation(
-                Vector3.up, direction);
+            Quaternion.FromToRotation(Vector3.up, dir);
 
-        // ── Shaft ────────────────────────────────
         GameObject shaft =
             GameObject.CreatePrimitive(
                 PrimitiveType.Cylinder);
-
         shaft.name = "Shaft";
-
         Destroy(shaft.GetComponent<Collider>());
-
-        shaft.transform.SetParent(
-            root.transform, false);
-
+        shaft.transform.SetParent(root.transform, false);
         shaft.transform.localPosition =
-            new Vector3(0f, length * 0.35f, 0f);
-
+            new Vector3(0f, length * 0.33f, 0f);
         shaft.transform.localScale =
-            new Vector3(
-                radius,
-                length * 0.35f,
-                radius
-            );
-
+            new Vector3(radius, length * 0.33f, radius);
         SetMaterialColor(shaft, color);
 
-        // ── Cone tip (scaled cube) ────────────────
         GameObject tip =
-            GameObject.CreatePrimitive(
-                PrimitiveType.Cube);
-
+            GameObject.CreatePrimitive(PrimitiveType.Cube);
         tip.name = "Tip";
-
         Destroy(tip.GetComponent<Collider>());
-
-        tip.transform.SetParent(
-            root.transform, false);
-
+        tip.transform.SetParent(root.transform, false);
         tip.transform.localPosition =
             new Vector3(0f, length * 0.75f, 0f);
-
+        tip.transform.localRotation =
+            Quaternion.Euler(45f, 45f, 0f);
         tip.transform.localScale =
-            new Vector3(
-                radius * 2.5f,
-                radius * 2.5f,
-                radius * 2.5f
-            );
-
+            new Vector3(radius*2f, radius*2f, radius*2f);
         SetMaterialColor(tip, color);
 
-        // ── Click collider ───────────────────────
-        // A single capsule covering shaft + tip,
-        // slightly oversized so it's easy to hit.
         CapsuleCollider col =
             root.AddComponent<CapsuleCollider>();
-
         col.isTrigger = true;
-        col.center =
-            new Vector3(0f, length * 0.5f, 0f);
-
-        col.height = length;
-        col.radius = radius * 2f;
+        col.center    = new Vector3(0f, length*.5f, 0f);
+        col.height    = length * 1.1f;
+        col.radius    = radius * 2.5f;
     }
 
     void DestroyResizeGizmo()
@@ -980,231 +855,78 @@ public class GridPlacementSystem : MonoBehaviour
         }
     }
 
-    // ── Helpers ──────────────────────────────────
+    // ════════════════════════════════════════════
+    // SELECTION OUTLINE
+    // ════════════════════════════════════════════
 
-    void EnsureDefaultScale(GameObject obj)
-    {
-        if (!defaultObjectScales.ContainsKey(obj))
-        {
-            defaultObjectScales.Add(
-                obj,
-                obj.transform.localScale
-            );
-        }
-    }
-
-    Bounds GetObjectBounds(GameObject target)
-    {
-        Bounds bounds =
-            new Bounds(
-                target.transform.position,
-                Vector3.zero
-            );
-
-        Renderer[] renderers =
-            target
-            .GetComponentsInChildren<Renderer>();
-
-        foreach (Renderer r in renderers)
-        {
-            bounds.Encapsulate(r.bounds);
-        }
-
-        return bounds;
-    }
-
-    void SetTransparent(
-        GameObject obj, float alpha)
-    {
-        Renderer[] renderers =
-            obj.GetComponentsInChildren<Renderer>();
-
-        foreach (Renderer renderer in renderers)
-        {
-            Material[] mats = renderer.materials;
-
-            for (int i = 0; i < mats.Length; i++)
-            {
-                Material m = new Material(mats[i]);
-                Color c = m.color;
-                c.a = alpha;
-                m.color = c;
-                mats[i] = m;
-            }
-
-            renderer.materials = mats;
-        }
-    }
-
-    void DisableColliders(GameObject obj)
-    {
-        Collider[] cols =
-            obj.GetComponentsInChildren<Collider>();
-
-        foreach (Collider c in cols)
-        {
-            c.enabled = false;
-        }
-    }
-
-    void SetMaterialColor(
-        GameObject obj, Color color)
-    {
-        MeshRenderer mr =
-            obj.GetComponent<MeshRenderer>();
-
-        if (mr == null)
-            return;
-
-        Material mat =
-            new Material(
-                Shader.Find(
-                    "Universal Render Pipeline/Unlit"
-                )
-            );
-
-        mat.color = color;
-        mr.material = mat;
-    }
-
-    int GetPlacementHeight(Vector3Int gridPos)
-    {
-        int topHeight = GetTopHeight(gridPos);
-
-        if (Input.GetKey(KeyCode.LeftShift))
-            return topHeight + 1;
-
-        if (dragPlacementMode)
-        {
-            if (
-                selectedAsset != null &&
-                selectedAsset.placeAtGroundLevel
-            )
-                return 0;
-
-            return topHeight >= 0 ? topHeight : 0;
-        }
-
-        return topHeight + 1;
-    }
-
-    void HighlightTarget(
-        Vector3Int? target,
-        Color highlightColor)
-    {
-        foreach (var pair in PlacedTiles)
-        {
-            Renderer[] renderers =
-                pair.Value.instance
-                .GetComponentsInChildren<Renderer>();
-
-            foreach (Renderer r in renderers)
-            {
-                foreach (Material m in r.materials)
-                {
-                    m.color = Color.white;
-                }
-            }
-        }
-
-        if (target == null)
-            return;
-
-        if (currentTool == EditorTool.Select)
-            return;
-
-        Renderer[] targetRenderers =
-            PlacedTiles[target.Value]
-            .instance
-            .GetComponentsInChildren<Renderer>();
-
-        foreach (Renderer r in targetRenderers)
-        {
-            foreach (Material m in r.materials)
-            {
-                m.color = highlightColor;
-            }
-        }
-    }
-
-    void CreateSelectionOutline(
-        GameObject target)
+    void CreateSelectionOutline(GameObject target)
     {
         DestroySelectionOutline();
-
-        if (target == null)
-            return;
-
-        Bounds bounds = GetObjectBounds(target);
+        if (target == null) return;
 
         selectionOutline =
             new GameObject("SelectionOutline");
+        RebuildOutlineEdges(
+            target, selectionOutline.transform);
+    }
 
-        Vector3 center = bounds.center;
-        Vector3 size = bounds.size;
-        float thickness = 0.03f;
+    void RebuildOutlineOnTarget(GameObject target)
+    {
+        if (selectionOutline == null) return;
 
-        void Edge(Vector3 pos, Vector3 scale)
-        {
-            CreateOutlineEdge(
-                pos, scale,
-                selectionOutline.transform);
-        }
+        foreach (Transform child in
+            selectionOutline.transform)
+            Destroy(child.gameObject);
 
-        // Top edges
-        Edge(center + new Vector3(0, size.y * .5f, size.z * .5f),
-             new Vector3(size.x, thickness, thickness));
-        Edge(center + new Vector3(0, size.y * .5f, -size.z * .5f),
-             new Vector3(size.x, thickness, thickness));
-        // Bottom edges
-        Edge(center + new Vector3(0, -size.y * .5f, size.z * .5f),
-             new Vector3(size.x, thickness, thickness));
-        Edge(center + new Vector3(0, -size.y * .5f, -size.z * .5f),
-             new Vector3(size.x, thickness, thickness));
-        // Vertical edges
-        Edge(center + new Vector3(-size.x * .5f, 0, size.z * .5f),
-             new Vector3(thickness, size.y, thickness));
-        Edge(center + new Vector3(-size.x * .5f, 0, -size.z * .5f),
-             new Vector3(thickness, size.y, thickness));
-        Edge(center + new Vector3(size.x * .5f, 0, size.z * .5f),
-             new Vector3(thickness, size.y, thickness));
-        Edge(center + new Vector3(size.x * .5f, 0, -size.z * .5f),
-             new Vector3(thickness, size.y, thickness));
-        // Z-direction edges
-        Edge(center + new Vector3(-size.x * .5f, 0, size.z * .5f),
-             new Vector3(thickness, thickness, size.z));
-        Edge(center + new Vector3(size.x * .5f, 0, size.z * .5f),
-             new Vector3(thickness, thickness, size.z));
-        Edge(center + new Vector3(-size.x * .5f, 0, -size.z * .5f),
-             new Vector3(thickness, thickness, size.z));
-        Edge(center + new Vector3(size.x * .5f, 0, -size.z * .5f),
-             new Vector3(thickness, thickness, size.z));
+        RebuildOutlineEdges(
+            target, selectionOutline.transform);
+    }
+
+    void RebuildOutlineEdges(
+        GameObject target, Transform root)
+    {
+        Bounds  b = GetObjectBounds(target);
+        Vector3 c = b.center;
+        Vector3 s = b.size;
+        float   t = 0.03f;
+
+        void E(Vector3 p, Vector3 sc) =>
+            CreateOutlineEdge(p, sc, root);
+
+        // Top ring
+        E(c+new Vector3(0,        s.y*.5f, s.z*.5f),  new Vector3(s.x,t,t));
+        E(c+new Vector3(0,        s.y*.5f,-s.z*.5f),  new Vector3(s.x,t,t));
+        E(c+new Vector3(-s.x*.5f, s.y*.5f,0),         new Vector3(t,t,s.z));
+        E(c+new Vector3( s.x*.5f, s.y*.5f,0),         new Vector3(t,t,s.z));
+        // Bottom ring
+        E(c+new Vector3(0,        -s.y*.5f, s.z*.5f), new Vector3(s.x,t,t));
+        E(c+new Vector3(0,        -s.y*.5f,-s.z*.5f), new Vector3(s.x,t,t));
+        E(c+new Vector3(-s.x*.5f, -s.y*.5f,0),        new Vector3(t,t,s.z));
+        E(c+new Vector3( s.x*.5f, -s.y*.5f,0),        new Vector3(t,t,s.z));
+        // Vertical pillars
+        E(c+new Vector3(-s.x*.5f,0, s.z*.5f), new Vector3(t,s.y,t));
+        E(c+new Vector3( s.x*.5f,0, s.z*.5f), new Vector3(t,s.y,t));
+        E(c+new Vector3(-s.x*.5f,0,-s.z*.5f), new Vector3(t,s.y,t));
+        E(c+new Vector3( s.x*.5f,0,-s.z*.5f), new Vector3(t,s.y,t));
     }
 
     void CreateOutlineEdge(
-        Vector3 position,
-        Vector3 scale,
-        Transform parent)
+        Vector3 pos, Vector3 scale, Transform parent)
     {
         GameObject edge =
-            GameObject.CreatePrimitive(
-                PrimitiveType.Cube);
-
+            GameObject.CreatePrimitive(PrimitiveType.Cube);
         edge.name = "OutlineEdge";
-
         edge.transform.SetParent(parent);
-
-        edge.transform.position = position;
-
+        edge.transform.position   = pos;
         edge.transform.localScale = scale;
 
-        Collider col =
-            edge.GetComponent<Collider>();
+        Collider col = edge.GetComponent<Collider>();
+        if (col != null) Destroy(col);
 
-        if (col != null)
-            Destroy(col);
-
-        SetMaterialColor(edge, Color.cyan);
+        Material mat = new Material(
+            Shader.Find("Universal Render Pipeline/Unlit"));
+        mat.color = Color.cyan;
+        edge.GetComponent<MeshRenderer>().material = mat;
     }
 
     void DestroySelectionOutline()
@@ -1213,45 +935,44 @@ public class GridPlacementSystem : MonoBehaviour
             Destroy(selectionOutline);
     }
 
-    bool GetMouseGridPosition(
-        out Vector3Int gridPos)
+    // ════════════════════════════════════════════
+    // HELPERS
+    // ════════════════════════════════════════════
+
+    bool GetMouseGridPosition(out Vector3Int gridPos)
     {
         gridPos = Vector3Int.zero;
 
-        Ray ray =
-            sceneCamera.ScreenPointToRay(
-                Input.mousePosition);
-
-        Plane plane =
-            new Plane(Vector3.up, Vector3.zero);
+        Ray   ray   = sceneCamera.ScreenPointToRay(
+            Input.mousePosition);
+        Plane plane = new Plane(Vector3.up, Vector3.zero);
 
         if (!plane.Raycast(ray, out float enter))
             return false;
 
-        Vector3 hitPoint = ray.GetPoint(enter);
+        Vector3 hit = ray.GetPoint(enter);
 
-        int x = Mathf.FloorToInt(hitPoint.x);
-        int z = Mathf.FloorToInt(hitPoint.z);
-
-        gridPos = new Vector3Int(x, 0, z);
+        gridPos = new Vector3Int(
+            Mathf.FloorToInt(hit.x),
+            0,
+            Mathf.FloorToInt(hit.z));
 
         return gridSystem.IsInsideGrid(gridPos);
     }
 
+    // Highest Y layer placed at this XZ column.
+    // Returns -1 if the column is empty.
     int GetTopHeight(Vector3Int gridPos)
     {
         int highest = -1;
 
         foreach (var pair in PlacedTiles)
         {
-            Vector3Int pos = pair.Key;
-
-            if (pos.x == gridPos.x &&
-                pos.z == gridPos.z &&
-                pos.y > highest)
-            {
-                highest = pos.y;
-            }
+            Vector3Int p = pair.Key;
+            if (p.x == gridPos.x &&
+                p.z == gridPos.z &&
+                p.y > highest)
+                highest = p.y;
         }
 
         return highest;
@@ -1264,18 +985,162 @@ public class GridPlacementSystem : MonoBehaviour
 
         foreach (var pair in PlacedTiles)
         {
-            Vector3Int pos = pair.Key;
-
-            if (pos.x == gridPos.x &&
-                pos.z == gridPos.z &&
-                pos.y > highest)
+            Vector3Int p = pair.Key;
+            if (p.x == gridPos.x &&
+                p.z == gridPos.z &&
+                p.y > highest)
             {
-                highest = pos.y;
-                result = pos;
+                highest = p.y;
+                result  = p;
             }
         }
 
         return result;
+    }
+
+    int GetPlacementHeight(Vector3Int gridPos)
+    {
+        int top = GetTopHeight(gridPos);
+
+        if (Input.GetKey(KeyCode.LeftShift))
+            return top + 1;
+
+        if (dragPlacementMode)
+        {
+            if (selectedAsset != null &&
+                selectedAsset.placeAtGroundLevel)
+                return 0;
+
+            return top >= 0 ? top : 0;
+        }
+
+        return top + 1;
+    }
+
+    Bounds GetObjectBounds(GameObject target)
+    {
+        Bounds b = new Bounds(
+            target.transform.position, Vector3.zero);
+
+        foreach (Renderer r in
+            target.GetComponentsInChildren<Renderer>())
+            b.Encapsulate(r.bounds);
+
+        return b;
+    }
+
+    Bounds CalculateObjectBounds(GameObject obj)
+    {
+        Renderer[] renderers =
+            obj.GetComponentsInChildren<Renderer>();
+
+        if (renderers.Length == 0)
+            return new Bounds(
+                obj.transform.position, Vector3.one);
+
+        Bounds b = renderers[0].bounds;
+        for (int i = 1; i < renderers.Length; i++)
+            b.Encapsulate(renderers[i].bounds);
+
+        return b;
+    }
+
+    void EnsureDefaultScale(GameObject obj)
+    {
+        if (!defaultObjectScales.ContainsKey(obj))
+            defaultObjectScales.Add(
+                obj, obj.transform.localScale);
+    }
+
+    // Look up which PlaceableAsset a PlacedTile uses
+    // (needed when re-registering during drag/drop).
+    PlaceableAsset GetAssetForTile(PlacedTile tile)
+    {
+        // We only need this for structure detection,
+        // so a null return is safe for non-structures.
+        if (tile == null) return null;
+
+        foreach (var asset in
+            FindObjectsOfType<PlaceableAsset>())
+        {
+            if (asset.assetID == tile.data.assetID)
+                return asset;
+        }
+
+        return null;
+    }
+
+    void HighlightTarget(
+        Vector3Int? target, Color color)
+    {
+        foreach (var pair in PlacedTiles)
+        {
+            foreach (Renderer r in
+                pair.Value.instance
+                .GetComponentsInChildren<Renderer>())
+            {
+                foreach (Material m in r.materials)
+                    m.color = Color.white;
+            }
+        }
+
+        if (target == null) return;
+        if (currentTool == EditorTool.Select) return;
+
+        HighlightSingleTile(target.Value, color);
+    }
+
+    void HighlightSingleTile(
+        Vector3Int pos, Color color)
+    {
+        if (!PlacedTiles.ContainsKey(pos)) return;
+
+        foreach (Renderer r in
+            PlacedTiles[pos].instance
+            .GetComponentsInChildren<Renderer>())
+        {
+            foreach (Material m in r.materials)
+                m.color = color;
+        }
+    }
+
+    void MakeTransparent(GameObject obj, float alpha)
+    {
+        foreach (Renderer r in
+            obj.GetComponentsInChildren<Renderer>())
+        {
+            Material[] mats = r.materials;
+            for (int i = 0; i < mats.Length; i++)
+            {
+                Material m = new Material(mats[i]);
+                Color    c = m.color;
+                c.a = alpha;
+                m.color = c;
+                mats[i] = m;
+            }
+            r.materials = mats;
+        }
+    }
+
+    void DisableColliders(GameObject obj)
+    {
+        foreach (Collider c in
+            obj.GetComponentsInChildren<Collider>())
+            c.enabled = false;
+    }
+
+    void SetMaterialColor(
+        GameObject obj, Color color)
+    {
+        MeshRenderer mr =
+            obj.GetComponent<MeshRenderer>();
+        if (mr == null) return;
+
+        Material mat = new Material(
+            Shader.Find(
+                "Universal Render Pipeline/Unlit"));
+        mat.color   = color;
+        mr.material = mat;
     }
 
     void HidePreview()

@@ -127,7 +127,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WaterScroller
   targetRenderer: {fileID: 7275872450782581967}
-  speedX: 0.02
-  speedY: 0.01
-  waveStrength: 0.01
+  speedX: 0.2
+  speedY: 0.1
+  waveStrength: 0.1
   waveSpeed: 1

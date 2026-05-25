@@ -7,6 +7,13 @@ using UnityEngine;
 public class PlaceableAsset
     : ScriptableObject
 {
+    public enum PlacementType
+    {
+        Tile,
+        Prop,
+        Structure
+    }
+
     [Header("Info")]
     public string assetID;
 
@@ -25,11 +32,18 @@ public class PlaceableAsset
     public Texture2D previewTexture;
 
     [Header("Placement")]
+    public PlacementType placementType =
+        PlacementType.Prop;
+
     public Vector3 placementRotation;
 
     public Vector3 placementOffset;
 
     public bool placeAtGroundLevel = true;
+
+    [Header("Structure Footprint")]
+    public Vector2Int footprintSize =
+        Vector2Int.one;
 
     [Header("Surface")]
     public bool isQuad = false;
