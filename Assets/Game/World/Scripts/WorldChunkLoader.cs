@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using Unity.AI.Navigation;
 
 public class WorldChunkLoader : MonoBehaviour
 {
@@ -11,9 +12,29 @@ public class WorldChunkLoader : MonoBehaviour
     private Dictionary<string, GameObject> loadedChunks =
         new Dictionary<string, GameObject>();
 
+    private NavMeshSurface navMeshSurface;
+
     private void Start()
     {
+        // GET NAVMESH SURFACE
+        navMeshSurface =
+            GetComponent<NavMeshSurface>();
+
+        // LOAD WORLD
         LoadAllChunkFiles();
+
+        // BUILD NAVMESH AFTER WORLD LOADS
+        BuildNavigation();
+    }
+
+    private void BuildNavigation()
+    {
+        if (navMeshSurface != null)
+        {
+            navMeshSurface.BuildNavMesh();
+
+            Debug.Log("NavMesh Built");
+        }
     }
 
     private void LoadAllChunkFiles()
@@ -154,7 +175,7 @@ public class WorldChunkLoader : MonoBehaviour
         Quaternion placementRotation =
             Quaternion.identity;
 
-        // Rotate quads flat (water, grass, floor tiles etc)
+        // ROTATE QUADS FLAT
         if (asset.isQuad)
         {
             placementRotation =

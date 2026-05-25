@@ -14,14 +14,10 @@ public class PlayerStats : MonoBehaviour
 
     public int bonusDamage = 0;
 
-    // LOWER = FASTER ATTACKS
-    // 1 = one attack per second
-    // 0.5 = two attacks per second
-    // 2 = one attack every two seconds
+    // LOWER = FASTER
     public float attackSpeed = 1f;
 
     [Header("Combat Range")]
-    // MELEE RANGE
     public float attackRange = 2f;
 
     [Header("Health")]
@@ -34,14 +30,21 @@ public class PlayerStats : MonoBehaviour
 
     public int currentMana = 100;
 
+    private PlayerHUD hud;
+
     void Start()
     {
         currentHealth = maxHealth;
 
         currentMana = maxMana;
+
+        hud =
+            FindObjectOfType<PlayerHUD>();
+
+        UpdateHUD();
     }
 
-    // FINAL DAMAGE CALCULATION
+    // DAMAGE CALCULATION
     public int CalculateDamage()
     {
         int finalDamage =
@@ -50,5 +53,49 @@ public class PlayerStats : MonoBehaviour
             bonusDamage;
 
         return finalDamage;
+    }
+
+    // TAKE DAMAGE
+    public void TakeDamage(int amount)
+    {
+        currentHealth -= amount;
+
+        currentHealth =
+            Mathf.Clamp(
+                currentHealth,
+                0,
+                maxHealth
+            );
+
+        Debug.Log(
+            "Player took " +
+            amount +
+            " damage."
+        );
+
+        UpdateHUD();
+
+        if (currentHealth <= 0)
+        {
+            Die();
+        }
+    }
+
+    // UPDATE UI
+    void UpdateHUD()
+    {
+        if (hud != null)
+        {
+            hud.UpdateHealth(
+                currentHealth,
+                maxHealth
+            );
+        }
+    }
+
+    // PLAYER DEATH
+    void Die()
+    {
+        Debug.Log("Player Died");
     }
 }

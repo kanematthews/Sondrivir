@@ -1,16 +1,36 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+public enum EnemyBehaviour
+{
+    Passive,
+    Hostile
+}
+
 public class EnemyStats : MonoBehaviour
 {
     [Header("Enemy Info")]
     public string enemyName = "Skeleton";
 
+    [Header("Behaviour")]
+    public EnemyBehaviour behaviour =
+        EnemyBehaviour.Hostile;
+
+    public float aggroRange = 8f;
+
     [Header("Stats")]
     public int maxHealth = 250;
+
     public int currentHealth;
 
+    [Header("Combat")]
     public int damage = 5;
+
+    // LOWER = FASTER
+    public float attackSpeed = 1.5f;
+
+    // MELEE RANGE
+    public float attackRange = 2f;
 
     [Header("UI")]
     public Image healthFill;
@@ -35,13 +55,31 @@ public class EnemyStats : MonoBehaviour
         currentHealth -= amount;
 
         currentHealth =
-            Mathf.Clamp(currentHealth, 0, maxHealth);
+            Mathf.Clamp(
+                currentHealth,
+                0,
+                maxHealth
+            );
 
-        Debug.Log(enemyName + " took " + amount + " damage.");
+        Debug.Log(
+            enemyName +
+            " took " +
+            amount +
+            " damage."
+        );
 
         UpdateHealthBar();
 
         SpawnDamageText(amount);
+
+        // ENGAGE ENEMY WHEN HIT
+        EnemyAI ai =
+            GetComponent<EnemyAI>();
+
+        if (ai != null)
+        {
+            ai.Engage();
+        }
 
         if (currentHealth <= 0)
         {
@@ -54,27 +92,33 @@ public class EnemyStats : MonoBehaviour
         if (healthFill != null)
         {
             healthFill.fillAmount =
-                (float)currentHealth / maxHealth;
+                (float)currentHealth /
+                maxHealth;
         }
     }
 
     void SpawnDamageText(int amount)
     {
-        if (damageTextPrefab == null ||
-            damageTextSpawnPoint == null)
+        if (
+            damageTextPrefab == null ||
+            damageTextSpawnPoint == null
+        )
             return;
 
         Vector3 randomOffset =
             new Vector3(
                 Random.Range(-0.5f, 0.5f),
                 Random.Range(0f, 0.5f),
-                0);
+                0
+            );
 
         GameObject textObj =
             Instantiate(
                 damageTextPrefab,
-                damageTextSpawnPoint.position + randomOffset,
-                Quaternion.identity);
+                damageTextSpawnPoint.position +
+                randomOffset,
+                Quaternion.identity
+            );
 
         DamageText damageText =
             textObj.GetComponent<DamageText>();
@@ -91,7 +135,10 @@ public class EnemyStats : MonoBehaviour
 
         gameObject.SetActive(false);
 
-        Invoke(nameof(Respawn), respawnTime);
+        Invoke(
+            nameof(Respawn),
+            respawnTime
+        );
     }
 
     void Respawn()
