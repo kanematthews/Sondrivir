@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 7275872450782581967}
   - component: {fileID: 6450981768305786202}
   - component: {fileID: 8939058912285466074}
+  - component: {fileID: -2200228063460983397}
   m_Layer: 0
   m_Name: WaterTile
   m_TagString: Untagged
@@ -127,7 +128,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WaterScroller
   targetRenderer: {fileID: 7275872450782581967}
-  speedX: 0.2
-  speedY: 0.1
-  waveStrength: 0.1
+  speedX: 0.8
+  speedY: 0.7
+  waveStrength: 0.5
   waveSpeed: 1
+--- !u!114 &-2200228063460983397
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6463290673501213296}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d5d4331a40752447aefc30e20174172, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WaterLightingController
+  waterRenderer: {fileID: 7275872450782581967}
+  dayColor: {r: 0.18, g: 0.42, b: 0.55, a: 1}
+  nightColor: {r: 0.06, g: 0.1, b: 0.18, a: 1}
+  moonTint: {r: 0.55, g: 0.65, b: 0.85, a: 1}
+  daySmoothness: 0.25
+  nightSmoothness: 0.6
