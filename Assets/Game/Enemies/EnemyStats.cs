@@ -102,21 +102,22 @@ public class EnemyStats : MonoBehaviour
     {
         if (
             damageTextPrefab == null ||
-            healthFill == null)
+            damageTextSpawnPoint == null)
         {
             return;
         }
 
-        // SPAWN FROM HEALTH BAR
-        Vector3 spawnPosition =
-            healthFill.transform.position;
-
         // RANDOM OFFSET
-        spawnPosition +=
+        Vector3 randomOffset =
             new Vector3(
-                Random.Range(-15f, 15f),
-                Random.Range(-5f, 10f),
+                Random.Range(-0.4f, 0.4f),
+                Random.Range(0f, 0.3f),
                 0f);
+
+        // SPAWN POSITION
+        Vector3 spawnPosition =
+            damageTextSpawnPoint.position +
+            randomOffset;
 
         GameObject textObj =
             Instantiate(
@@ -124,20 +125,10 @@ public class EnemyStats : MonoBehaviour
                 spawnPosition,
                 Quaternion.identity);
 
-        // PARENT TO CANVAS
-        Canvas canvas =
-            FindFirstObjectByType<Canvas>();
-
-        if (canvas != null)
-        {
-            textObj.transform.SetParent(
-                canvas.transform,
-                false);
-        }
-
         // MAKE TEXT RED
-        TextMeshProUGUI text =
-            textObj.GetComponent<TextMeshProUGUI>();
+        TMPro.TextMeshPro text =
+            textObj.GetComponent
+            <TMPro.TextMeshPro>();
 
         if (text != null)
         {

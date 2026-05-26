@@ -1,6 +1,4 @@
-using System.Collections;
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 
 public class PlayerStatsUI : MonoBehaviour
@@ -12,14 +10,8 @@ public class PlayerStatsUI : MonoBehaviour
 
     public Transform contentParent;
 
-    public Transform hudRoot;
-
-    private TMP_Text levelUpNotificationText;
-
     private Dictionary<string, StatRowUI> rows =
         new Dictionary<string, StatRowUI>();
-
-    private bool showingNotification = false;
 
     private readonly string[] statOrder =
     {
@@ -45,8 +37,6 @@ public class PlayerStatsUI : MonoBehaviour
     void Start()
     {
         GenerateRows();
-
-        CreateLevelUpNotification();
     }
 
     void Update()
@@ -135,15 +125,6 @@ public class PlayerStatsUI : MonoBehaviour
             : "OFF");
 
         RefreshButtons();
-
-        // SHOW LEVEL UP MESSAGE
-        if (
-            playerStats.statPoints > 0 &&
-            !showingNotification)
-        {
-            StartCoroutine(
-                ShowLevelUpNotification());
-        }
     }
 
     void GenerateRows()
@@ -188,102 +169,5 @@ public class PlayerStatsUI : MonoBehaviour
         {
             row.Value.RefreshButton();
         }
-    }
-
-    void CreateLevelUpNotification()
-    {
-        if (hudRoot == null)
-        {
-            Debug.LogWarning(
-                "HUDRoot not assigned.");
-
-            return;
-        }
-
-        GameObject notificationObj =
-            new GameObject(
-                "LevelUpNotification");
-
-        notificationObj.transform.SetParent(
-            hudRoot,
-            false);
-
-        RectTransform rect =
-            notificationObj
-            .AddComponent<RectTransform>();
-
-        rect.anchorMin =
-            new Vector2(0.5f, 0.5f);
-
-        rect.anchorMax =
-            new Vector2(0.5f, 0.5f);
-
-        rect.pivot =
-            new Vector2(0.5f, 0.5f);
-
-        rect.anchoredPosition =
-            new Vector2(0, 120);
-
-        rect.sizeDelta =
-            new Vector2(700, 60);
-
-        levelUpNotificationText =
-            notificationObj
-            .AddComponent<TextMeshProUGUI>();
-
-        levelUpNotificationText.text =
-            "";
-
-        levelUpNotificationText.fontSize =
-            20;
-
-        levelUpNotificationText.alignment =
-            TextAlignmentOptions.Center;
-
-        levelUpNotificationText.color =
-            new Color32(
-                255,
-                230,
-                120,
-                255);
-
-        // OUTLINE
-        levelUpNotificationText
-            .fontMaterial
-            .EnableKeyword("OUTLINE_ON");
-
-        levelUpNotificationText
-            .outlineWidth = 0.2f;
-
-        levelUpNotificationText
-            .outlineColor = Color.black;
-
-        notificationObj.SetActive(false);
-    }
-
-    IEnumerator ShowLevelUpNotification()
-    {
-        showingNotification = true;
-
-        if (levelUpNotificationText != null)
-        {
-            levelUpNotificationText
-                .gameObject
-                .SetActive(true);
-
-            levelUpNotificationText.text =
-                "You have "
-                + playerStats.statPoints
-                + " stat points to spend!";
-
-            yield return
-                new WaitForSeconds(15f);
-
-            levelUpNotificationText
-                .gameObject
-                .SetActive(false);
-        }
-
-        showingNotification = false;
     }
 }

@@ -144,6 +144,15 @@ public class PlayerStats : MonoBehaviour
 
         UpdateHealthUI();
 
+        PlayerDamageNotifier notifier =
+                FindFirstObjectByType
+                <PlayerDamageNotifier>();
+
+            if (notifier != null)
+            {
+                notifier.ShowDamage(amount);
+            }
+            
         Debug.Log(
             "Player took " +
             amount +
@@ -207,13 +216,31 @@ public class PlayerStats : MonoBehaviour
 
         statPoints += 3;
 
-        experienceToNextLevel += 25;
+        // EXP SCALING
+        experienceToNextLevel *= 3;
 
         Debug.Log(
             "LEVEL UP! Level " +
             level);
 
         RecalculateStats();
+
+        // FIND NOTIFIER LIVE
+        LevelUpNotifier notifier =
+            FindFirstObjectByType
+            <LevelUpNotifier>();
+
+        if (notifier != null)
+        {
+            notifier.ShowLevelUpMessage(
+                level,
+                statPoints);
+        }
+        else
+        {
+            Debug.LogWarning(
+                "No LevelUpNotifier found!");
+        }
     }
 
     void UpdateHealthUI()
