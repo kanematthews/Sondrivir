@@ -91,9 +91,27 @@ public class PlayerStatsUI : MonoBehaviour
             "Defense",
             playerStats.defense.ToString());
 
-        Set(
-            "Capacity",
-            playerStats.capacity.ToString());
+        PlayerInventory inventory =
+        playerStats.GetComponent
+        <PlayerInventory>();
+
+    float currentWeight = 0f;
+
+    if (inventory != null)
+    {
+        currentWeight =
+            inventory.GetCurrentWeight();
+    }
+
+    float remainingCapacity =
+        playerStats.capacity -
+        currentWeight;
+
+    Set(
+        "Capacity",
+        remainingCapacity.ToString("0.0") +
+        "/" +
+        playerStats.capacity.ToString("0.0"));
 
         Set(
             "Range",

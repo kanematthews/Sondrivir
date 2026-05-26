@@ -142,10 +142,6 @@ public class StatRowUI : MonoBehaviour
                 playerStats.intellect++;
                 break;
 
-            case "Capacity":
-                playerStats.capacity++;
-                break;
-
             case "HP Regen":
                 playerStats.hpRegen++;
                 break;

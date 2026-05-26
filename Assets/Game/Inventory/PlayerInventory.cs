@@ -123,4 +123,25 @@ public class PlayerInventory : MonoBehaviour
             playerStats.capacity -
             currentWeight;
     }
+
+    public float GetCurrentWeight()
+    {
+        float totalWeight = 0f;
+
+        foreach (ItemStack stack in items)
+        {
+            if (
+                stack == null ||
+                stack.item == null)
+            {
+                continue;
+            }
+
+            totalWeight +=
+                stack.item.weight *
+                stack.amount;
+        }
+
+        return totalWeight;
+    }
 }

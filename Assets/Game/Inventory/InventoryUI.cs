@@ -133,9 +133,13 @@ public class InventoryUI : MonoBehaviour
             weightText != null &&
             stats != null)
         {
+            float remainingCapacity =
+                stats.capacity -
+                inventory.GetCurrentWeight();
+
             weightText.text =
                 "Capacity: " +
-                inventory.currentWeight
+                remainingCapacity
                 .ToString("0.0") +
                 " / " +
                 stats.capacity
