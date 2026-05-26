@@ -164,7 +164,9 @@ GameObject:
   - component: {fileID: 8103890937333858527}
   - component: {fileID: 3591504362007589329}
   - component: {fileID: -610785378544631037}
-  - component: {fileID: -4818748973687422564}
+  - component: {fileID: 8917141053142679567}
+  - component: {fileID: 1805336970105517751}
+  - component: {fileID: -429389647113501205}
   m_Layer: 5
   m_Name: LootSlot
   m_TagString: Untagged
@@ -288,10 +290,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LootSlotUI
   icon: {fileID: 5384014414938729171}
+  stackText: {fileID: 0}
   stack:
     item: {fileID: 0}
+    containerInstance: {fileID: 0}
     amount: 1
-  sourceBag: {fileID: 0}
+  parentContainer: {fileID: 0}
+  slotIndex: -1
 --- !u!114 &-610785378544631037
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -306,8 +311,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LootSlotHover
   stack:
     item: {fileID: 0}
+    containerInstance: {fileID: 0}
     amount: 1
---- !u!114 &-4818748973687422564
+--- !u!114 &8917141053142679567
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -316,6 +322,30 @@ MonoBehaviour:
   m_GameObject: {fileID: 8979132504838540428}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ce36e33849fd42f479ba86155da59a91, type: 3}
+  m_Script: {fileID: 11500000, guid: 1dae1d67a8064e040854844dda34149e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InventorySlotDrag
+--- !u!114 &1805336970105517751
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8979132504838540428}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8ed6aebc52fa5143b6863c04afee01a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LootSlotClick
+--- !u!114 &-429389647113501205
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8979132504838540428}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcc706e96dddb924fa03478b9c410f6a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BagItemClick

@@ -36,6 +36,10 @@ public class ItemData : ScriptableObject
 
     public ItemRarity rarity;
 
+    [Header("Container")]
+    public bool isContainer = false;
+    public int containerSlots = 4;
+
     [Header("Visuals")]
     public Sprite icon;
 

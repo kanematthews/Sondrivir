@@ -39,7 +39,7 @@ public class EnemyStats : MonoBehaviour
     public GameObject lootBagPrefab;
 
     public List<LootDrop> lootTable =
-    new List<LootDrop>();
+        new List<LootDrop>();
 
     [Header("UI")]
     public Image healthFill;
@@ -48,62 +48,6 @@ public class EnemyStats : MonoBehaviour
     public GameObject damageTextPrefab;
 
     public Transform damageTextSpawnPoint;
-
-    void SpawnLootBag()
-    {
-        if (lootBagPrefab == null)
-        {
-            return;
-        }
-
-        // SPAWN BAG
-        GameObject bagObj =
-    Instantiate(
-        lootBagPrefab,
-        transform.position,
-        Quaternion.Euler(
-            90f,
-            0f,
-            0f));
-
-        // GET LOOT BAG
-        LootBag lootBag =
-            bagObj.GetComponent<LootBag>();
-
-        if (lootBag == null)
-        {
-            return;
-        }
-
-        // ROLL LOOT TABLE
-        foreach (LootDrop drop in lootTable)
-        {
-            double roll =
-                Random.Range(0f, 100f);
-
-            if (roll <= drop.dropChance)
-            {
-                ItemStack stack =
-                    new ItemStack();
-
-                stack.item =
-                    drop.item;
-
-                stack.amount =
-                    Random.Range(
-                        drop.minAmount,
-                        drop.maxAmount + 1);
-
-                lootBag.items.Add(stack);
-            }
-        }
-
-        // DESTROY EMPTY BAG
-        if (lootBag.items.Count <= 0)
-        {
-            Destroy(bagObj);
-        }
-    }
 
     [Header("Respawn")]
     public float respawnTime = 5f;
@@ -114,6 +58,10 @@ public class EnemyStats : MonoBehaviour
 
         UpdateHealthBar();
     }
+
+    // =========================================
+    // DAMAGE
+    // =========================================
 
     public void TakeDamage(int amount)
     {
@@ -151,6 +99,10 @@ public class EnemyStats : MonoBehaviour
         }
     }
 
+    // =========================================
+    // HEALTH BAR
+    // =========================================
+
     void UpdateHealthBar()
     {
         if (healthFill != null)
@@ -160,6 +112,10 @@ public class EnemyStats : MonoBehaviour
                 maxHealth;
         }
     }
+
+    // =========================================
+    // DAMAGE TEXT
+    // =========================================
 
     void SpawnDamageText(int amount)
     {
@@ -207,6 +163,76 @@ public class EnemyStats : MonoBehaviour
         }
     }
 
+    // =========================================
+    // LOOT
+    // =========================================
+
+    void SpawnLootBag()
+    {
+        if (lootBagPrefab == null)
+        {
+            return;
+        }
+
+        // SPAWN BAG
+        GameObject bagObj =
+            Instantiate(
+                lootBagPrefab,
+                transform.position,
+                Quaternion.Euler(
+                    90f,
+                    0f,
+                    0f));
+
+        // GET LOOT BAG
+        LootBag lootBag =
+            bagObj.GetComponent<LootBag>();
+
+        if (lootBag == null)
+        {
+            Destroy(bagObj);
+
+            return;
+        }
+
+        bool hasLoot = false;
+
+        // ROLL LOOT TABLE
+        foreach (LootDrop drop in lootTable)
+        {
+            double roll =
+                Random.Range(0f, 100f);
+
+            if (roll <= drop.dropChance)
+            {
+                int amount =
+                    Random.Range(
+                        drop.minAmount,
+                        drop.maxAmount + 1);
+
+                bool added =
+                    lootBag.AddItem(
+                        drop.item,
+                        amount);
+
+                if (added)
+                {
+                    hasLoot = true;
+                }
+            }
+        }
+
+        // DESTROY EMPTY BAG
+        if (!hasLoot)
+        {
+            Destroy(bagObj);
+        }
+    }
+
+    // =========================================
+    // DEATH
+    // =========================================
+
     void Die()
     {
         Debug.Log(
@@ -232,6 +258,9 @@ public class EnemyStats : MonoBehaviour
             respawnTime);
     }
 
+    // =========================================
+    // RESPAWN
+    // =========================================
 
     void Respawn()
     {

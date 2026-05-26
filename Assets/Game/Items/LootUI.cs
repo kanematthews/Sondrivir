@@ -7,9 +7,9 @@ public class LootUI : MonoBehaviour
     [Header("UI")]
     public GameObject window;
 
-    public Transform itemContainer;
+    public Transform slotContainer;
 
-    public GameObject lootSlotPrefab;
+    public GameObject slotPrefab;
 
     private LootBag currentBag;
 
@@ -20,7 +20,8 @@ public class LootUI : MonoBehaviour
         Close();
     }
 
-    public void Open(LootBag bag)
+    public void Open(
+        LootBag bag)
     {
         currentBag = bag;
 
@@ -39,7 +40,7 @@ public class LootUI : MonoBehaviour
     public void Refresh()
     {
         // CLEAR OLD SLOTS
-        foreach (Transform child in itemContainer)
+        foreach (Transform child in slotContainer)
         {
             Destroy(child.gameObject);
         }
@@ -49,40 +50,70 @@ public class LootUI : MonoBehaviour
             return;
         }
 
-        // CREATE SLOT FOR EACH ITEM
-        foreach (ItemStack stack in currentBag.items)
+        // CREATE SLOTS
+        for (int i = 0; i < currentBag.slots.Count; i++)
         {
             GameObject slot =
                 Instantiate(
-                    lootSlotPrefab,
-                    itemContainer);
+                    slotPrefab,
+                    slotContainer);
 
             LootSlotUI slotUI =
                 slot.GetComponent<LootSlotUI>();
 
-            if (
-                slotUI != null &&
-                slotUI.icon != null &&
-                stack.item != null)
+            ItemStack stack =
+                currentBag.slots[i];
+
+            // SLOT INFO
+            slotUI.slotIndex = i;
+
+            slotUI.parentContainer =
+                currentBag;
+
+            // EMPTY SLOT
+            if (stack == null)
             {
-                slotUI.icon.sprite =
-                    stack.item.icon;
+                if (
+                    slotUI.icon != null)
+                {
+                    slotUI.icon.enabled = false;
+                }
 
-                    slotUI.stack =
-                    stack;
-
-                slotUI.sourceBag =
-                    currentBag;
+                continue;
             }
 
-            LootSlotHover hover =
-    slot.GetComponent<LootSlotHover>();
+            // ICON
+            slotUI.icon.enabled = true;
 
-if (hover != null)
-{
-    hover.stack =
-    stack;
-}
+            slotUI.icon.sprite =
+                stack.item.icon;
+
+            slotUI.stack =
+                stack;
+
+            // STACK TEXT
+            if (slotUI.stackText != null)
+            {
+                if (stack.amount > 1)
+                {
+                    slotUI.stackText.text =
+                        stack.amount.ToString();
+                }
+                else
+                {
+                    slotUI.stackText.text = "";
+                }
+            }
+
+            // TOOLTIP
+            LootSlotHover hover =
+                slot.GetComponent<LootSlotHover>();
+
+            if (hover != null)
+            {
+                hover.stack =
+                    stack;
+            }
         }
     }
 }

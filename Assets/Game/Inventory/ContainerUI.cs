@@ -1,77 +1,40 @@
 using UnityEngine;
+using UnityEngine.UI;
 
-public class InventoryUI : MonoBehaviour
+public class ContainerUI : MonoBehaviour
 {
-    public static InventoryUI instance;
-
     [Header("UI")]
-    public GameObject window;
-
     public Transform slotContainer;
 
     public GameObject slotPrefab;
 
-    private PlayerInventory inventory;
+    [HideInInspector]
+    public Container container;
 
-    void Awake()
-    {
-        instance = this;
+    // GRID SETTINGS
+    private int columns = 4;
 
-        Close();
-    }
+    private float cellSize = 40f;
 
-    void Start()
-    {
-        inventory =
-            FindFirstObjectByType
-            <PlayerInventory>();
+    private float spacing = 4f;
 
-        Refresh();
-    }
-
-    void Update()
-    {
-        // TOGGLE INVENTORY
-        if (Input.GetKeyDown(KeyCode.Tab))
-        {
-            if (window.activeSelf)
-            {
-                Close();
-            }
-            else
-            {
-                Open();
-            }
-        }
-    }
-
-    public void Open()
-    {
-        window.SetActive(true);
-
-        Refresh();
-    }
-
-    public void Close()
-    {
-        window.SetActive(false);
-    }
+    private float padding = 16f;
 
     public void Refresh()
     {
-        // CLEAR OLD SLOTS
+        // CLEAR OLD
         foreach (Transform child in slotContainer)
         {
             Destroy(child.gameObject);
         }
 
-        if (inventory == null)
+        if (container == null)
         {
             return;
         }
 
-        // CREATE FIXED INVENTORY SLOTS
-        for (int i = 0; i < inventory.slotCount; i++)
+        // CREATE SLOTS
+        for (int i = 0; i < container.slotCount; i++)
         {
             GameObject slot =
                 Instantiate(
@@ -82,28 +45,23 @@ public class InventoryUI : MonoBehaviour
                 slot.GetComponent<LootSlotUI>();
 
             ItemStack stack =
-                inventory.slots[i];
+                container.slots[i];
 
             // SLOT INFO
             slotUI.slotIndex = i;
 
             slotUI.parentContainer =
-                inventory;
+                container;
 
             // EMPTY SLOT
             if (stack == null)
             {
-                if (
-                    slotUI != null &&
-                    slotUI.icon != null)
-                {
-                    slotUI.icon.enabled = false;
-                }
+                slotUI.icon.enabled = false;
 
                 continue;
             }
 
-            // SHOW ITEM
+            // ICON
             slotUI.icon.enabled = true;
 
             slotUI.icon.sprite =
@@ -132,9 +90,43 @@ public class InventoryUI : MonoBehaviour
 
             if (hover != null)
             {
-                hover.stack =
-                    stack;
+                hover.stack = stack;
             }
         }
+
+        ResizeWindow();
+    }
+
+    // =========================================
+    // RESIZE WINDOW
+    // =========================================
+
+    void ResizeWindow()
+    {
+        RectTransform rect =
+            GetComponent<RectTransform>();
+
+        if (rect == null)
+        {
+            return;
+        }
+
+        // CALCULATE ROWS
+        int rows =
+            Mathf.CeilToInt(
+                (float)container.slotCount /
+                columns);
+
+        // CALCULATE HEIGHT
+        float height =
+            padding +
+            (rows * cellSize) +
+            ((rows - 1) * spacing);
+
+        // APPLY HEIGHT
+        rect.sizeDelta =
+            new Vector2(
+                rect.sizeDelta.x,
+                height);
     }
 }

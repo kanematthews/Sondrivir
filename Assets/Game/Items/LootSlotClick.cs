@@ -31,12 +31,24 @@ public class LootSlotClick :
         if (
             slotUI == null ||
             slotUI.stack == null ||
-            slotUI.stack.item == null ||
-            slotUI.sourceBag == null)
+            slotUI.stack.item == null)
         {
-            Debug.Log(
-                "Loot transfer failed: Missing references.");
+            return;
+        }
 
+        // MUST BELONG TO CONTAINER
+        if (slotUI.parentContainer == null)
+        {
+            return;
+        }
+
+        // ONLY LOOT FROM LOOT BAGS
+        LootBag lootBag =
+            slotUI.parentContainer
+            as LootBag;
+
+        if (lootBag == null)
+        {
             return;
         }
 
@@ -52,10 +64,6 @@ public class LootSlotClick :
             return;
         }
 
-        Debug.Log(
-            "Trying to loot: " +
-            slotUI.stack.item.itemName);
-
         // TRY ADDING ITEM
         bool success =
             inventory.AddItem(
@@ -65,36 +73,42 @@ public class LootSlotClick :
         if (!success)
         {
             Debug.Log(
-                "Could not loot item.");
+                "Inventory full.");
 
             return;
         }
 
-        Debug.Log(
-            "Loot success!");
-
         // REMOVE FROM BAG
-        slotUI.sourceBag.items.Remove(
-            slotUI.stack);
+        lootBag.RemoveItem(
+            slotUI.slotIndex);
 
-        // REFRESH LOOT UI
+        // REFRESH UI
         if (LootUI.instance != null)
         {
             LootUI.instance.Refresh();
         }
 
-        // REFRESH INVENTORY UI
         if (InventoryUI.instance != null)
         {
             InventoryUI.instance.Refresh();
         }
 
         // DESTROY EMPTY BAG
-        if (
-            slotUI.sourceBag.items.Count <= 0)
+        bool empty = true;
+
+        foreach (ItemStack stack in lootBag.slots)
+        {
+            if (stack != null)
+            {
+                empty = false;
+                break;
+            }
+        }
+
+        if (empty)
         {
             Destroy(
-                slotUI.sourceBag.gameObject);
+                lootBag.gameObject);
 
             if (LootUI.instance != null)
             {

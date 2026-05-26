@@ -1,35 +1,21 @@
-using System.Collections.Generic;
 using UnityEngine;
 
-public class LootBag : MonoBehaviour
+public class LootBag : Container
 {
-    [Header("Loot")]
-    public List<ItemStack> items =
-        new List<ItemStack>();
+    [Header("Loot Bag")]
+    public float despawnTime = 30f;
 
-    [Header("Lifetime")]
-    public float despawnTime = 120f;
+    protected override void Awake()
+    {
+        base.Awake();
+
+        containerName = "Loot Bag";
+    }
 
     void Start()
     {
         Destroy(
             gameObject,
             despawnTime);
-    }
-
-    // REMOVE ITEM FROM BAG
-    public void RemoveItem(
-        ItemStack stack)
-    {
-        if (items.Contains(stack))
-        {
-            items.Remove(stack);
-        }
-
-        // DESTROY BAG IF EMPTY
-        if (items.Count <= 0)
-        {
-            Destroy(gameObject);
-        }
     }
 }
