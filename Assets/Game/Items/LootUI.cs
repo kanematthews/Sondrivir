@@ -36,7 +36,7 @@ public class LootUI : MonoBehaviour
         window.SetActive(false);
     }
 
-    void Refresh()
+    public void Refresh()
     {
         // CLEAR OLD SLOTS
         foreach (Transform child in itemContainer)
@@ -67,6 +67,12 @@ public class LootUI : MonoBehaviour
             {
                 slotUI.icon.sprite =
                     stack.item.icon;
+
+                    slotUI.stack =
+                    stack;
+
+                slotUI.sourceBag =
+                    currentBag;
             }
 
             LootSlotHover hover =
@@ -74,7 +80,8 @@ public class LootUI : MonoBehaviour
 
 if (hover != null)
 {
-    hover.item = stack.item;
+    hover.stack =
+    stack;
 }
         }
     }

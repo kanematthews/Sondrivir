@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
   itemID: currency_gold
   itemName: Gold
-  description: 
+  description: Currency I guess.
   itemType: 5
   rarity: 0
   icon: {fileID: 21300000, guid: f28ce38cd3d2ec44ebdaf968be29836d, type: 3}
@@ -28,4 +28,4 @@ MonoBehaviour:
   attackSpeed: 0
   requiredStrength: 0
   requiredDexterity: 0
-  requiredIntellect: 0
+  requiredIntelligence: 0

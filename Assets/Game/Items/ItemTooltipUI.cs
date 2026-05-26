@@ -19,14 +19,15 @@ public class ItemTooltipUI : MonoBehaviour
 
     void Update()
     {
-        // FOLLOW MOUSE
         transform.position =
             Input.mousePosition;
     }
 
-    public void Show(ItemData item)
+    public void Show(ItemStack stack)
     {
-        if (item == null)
+        if (
+            stack == null ||
+            stack.item == null)
         {
             return;
         }
@@ -34,7 +35,7 @@ public class ItemTooltipUI : MonoBehaviour
         window.SetActive(true);
 
         tooltipText.text =
-            GetTooltipText(item);
+            GetTooltipText(stack);
     }
 
     public void Hide()
@@ -42,13 +43,29 @@ public class ItemTooltipUI : MonoBehaviour
         window.SetActive(false);
     }
 
-    string GetTooltipText(ItemData item)
+    string GetTooltipText(ItemStack stack)
     {
+        if (
+            stack == null ||
+            stack.item == null)
+        {
+            return "";
+        }
+
+        ItemData item =
+            stack.item;
+
         string text = "";
 
         // NAME
-        text +=
-            item.itemName;
+        text += item.itemName;
+
+        if (stack.amount > 1)
+        {
+            text +=
+                " x" +
+                stack.amount;
+        }
 
         // DESCRIPTION
         if (!string.IsNullOrEmpty(item.description))

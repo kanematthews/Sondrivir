@@ -6,17 +6,17 @@ public class LootSlotHover :
     IPointerEnterHandler,
     IPointerExitHandler
 {
-    public ItemData item;
+    public ItemStack stack;
 
     public void OnPointerEnter(
         PointerEventData eventData)
     {
         if (
             ItemTooltipUI.instance != null &&
-            item != null)
+            stack != null)
         {
             ItemTooltipUI.instance.Show(
-                item);
+                stack);
         }
     }
 

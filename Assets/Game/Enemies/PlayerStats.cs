@@ -21,7 +21,8 @@ public class PlayerStats : MonoBehaviour
 
     public int vitality = 5;
 
-    public int capacity = 5;
+    // HOW MUCH WEIGHT PLAYER CAN CARRY
+    public float capacity = 50f;
 
     public int hpRegen = 1;
 
@@ -91,6 +92,10 @@ public class PlayerStats : MonoBehaviour
         moveSpeed =
             5f + (dexterity * 0.05f);
 
+        // CAPACITY
+        capacity =
+            50f + (strength * 10f);
+
         // ATTACK SPEED
         // 1 = once per second
         attackSpeed = 1f;
@@ -145,14 +150,14 @@ public class PlayerStats : MonoBehaviour
         UpdateHealthUI();
 
         PlayerDamageNotifier notifier =
-                FindFirstObjectByType
-                <PlayerDamageNotifier>();
+            FindFirstObjectByType
+            <PlayerDamageNotifier>();
 
-            if (notifier != null)
-            {
-                notifier.ShowDamage(amount);
-            }
-            
+        if (notifier != null)
+        {
+            notifier.ShowDamage(amount);
+        }
+
         Debug.Log(
             "Player took " +
             amount +
