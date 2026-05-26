@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -34,6 +35,12 @@ public class EnemyStats : MonoBehaviour
     [Header("Rewards")]
     public int experienceReward = 25;
 
+    [Header("Loot")]
+    public GameObject lootBagPrefab;
+
+    public List<LootDrop> lootTable =
+    new List<LootDrop>();
+
     [Header("UI")]
     public Image healthFill;
 
@@ -41,6 +48,62 @@ public class EnemyStats : MonoBehaviour
     public GameObject damageTextPrefab;
 
     public Transform damageTextSpawnPoint;
+
+    void SpawnLootBag()
+    {
+        if (lootBagPrefab == null)
+        {
+            return;
+        }
+
+        // SPAWN BAG
+        GameObject bagObj =
+    Instantiate(
+        lootBagPrefab,
+        transform.position,
+        Quaternion.Euler(
+            90f,
+            0f,
+            0f));
+
+        // GET LOOT BAG
+        LootBag lootBag =
+            bagObj.GetComponent<LootBag>();
+
+        if (lootBag == null)
+        {
+            return;
+        }
+
+        // ROLL LOOT TABLE
+        foreach (LootDrop drop in lootTable)
+        {
+            double roll =
+                Random.Range(0f, 100f);
+
+            if (roll <= drop.dropChance)
+            {
+                ItemStack stack =
+                    new ItemStack();
+
+                stack.item =
+                    drop.item;
+
+                stack.amount =
+                    Random.Range(
+                        drop.minAmount,
+                        drop.maxAmount + 1);
+
+                lootBag.items.Add(stack);
+            }
+        }
+
+        // DESTROY EMPTY BAG
+        if (lootBag.items.Count <= 0)
+        {
+            Destroy(bagObj);
+        }
+    }
 
     [Header("Respawn")]
     public float respawnTime = 5f;
@@ -149,6 +212,9 @@ public class EnemyStats : MonoBehaviour
         Debug.Log(
             enemyName + " died.");
 
+        // SPAWN LOOT BAG
+        SpawnLootBag();
+
         // GIVE PLAYER EXP
         PlayerStats player =
             FindFirstObjectByType<PlayerStats>();
@@ -165,6 +231,7 @@ public class EnemyStats : MonoBehaviour
             nameof(Respawn),
             respawnTime);
     }
+
 
     void Respawn()
     {
