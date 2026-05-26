@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public enum EnemyBehaviour
 {
@@ -18,19 +19,20 @@ public class EnemyStats : MonoBehaviour
 
     public float aggroRange = 8f;
 
-    [Header("Stats")]
+    [Header("Combat")]
     public int maxHealth = 250;
 
     public int currentHealth;
 
-    [Header("Combat")]
     public int damage = 5;
 
-    // LOWER = FASTER
-    public float attackSpeed = 1.5f;
-
-    // MELEE RANGE
     public float attackRange = 2f;
+
+    // 1 = once per second
+    public float attackSpeed = 1f;
+
+    [Header("Rewards")]
+    public int experienceReward = 25;
 
     [Header("UI")]
     public Image healthFill;
@@ -43,7 +45,7 @@ public class EnemyStats : MonoBehaviour
     [Header("Respawn")]
     public float respawnTime = 5f;
 
-    private void Start()
+    void Start()
     {
         currentHealth = maxHealth;
 
@@ -58,21 +60,19 @@ public class EnemyStats : MonoBehaviour
             Mathf.Clamp(
                 currentHealth,
                 0,
-                maxHealth
-            );
+                maxHealth);
 
         Debug.Log(
             enemyName +
             " took " +
             amount +
-            " damage."
-        );
+            " damage.");
 
         UpdateHealthBar();
 
         SpawnDamageText(amount);
 
-        // ENGAGE ENEMY WHEN HIT
+        // PASSIVE ENEMIES BECOME AGGRESSIVE
         EnemyAI ai =
             GetComponent<EnemyAI>();
 
@@ -81,6 +81,7 @@ public class EnemyStats : MonoBehaviour
             ai.Engage();
         }
 
+        // DEAD
         if (currentHealth <= 0)
         {
             Die();
@@ -101,24 +102,47 @@ public class EnemyStats : MonoBehaviour
     {
         if (
             damageTextPrefab == null ||
-            damageTextSpawnPoint == null
-        )
+            healthFill == null)
+        {
             return;
+        }
 
-        Vector3 randomOffset =
+        // SPAWN FROM HEALTH BAR
+        Vector3 spawnPosition =
+            healthFill.transform.position;
+
+        // RANDOM OFFSET
+        spawnPosition +=
             new Vector3(
-                Random.Range(-0.5f, 0.5f),
-                Random.Range(0f, 0.5f),
-                0
-            );
+                Random.Range(-15f, 15f),
+                Random.Range(-5f, 10f),
+                0f);
 
         GameObject textObj =
             Instantiate(
                 damageTextPrefab,
-                damageTextSpawnPoint.position +
-                randomOffset,
-                Quaternion.identity
-            );
+                spawnPosition,
+                Quaternion.identity);
+
+        // PARENT TO CANVAS
+        Canvas canvas =
+            FindFirstObjectByType<Canvas>();
+
+        if (canvas != null)
+        {
+            textObj.transform.SetParent(
+                canvas.transform,
+                false);
+        }
+
+        // MAKE TEXT RED
+        TextMeshProUGUI text =
+            textObj.GetComponent<TextMeshProUGUI>();
+
+        if (text != null)
+        {
+            text.color = Color.red;
+        }
 
         DamageText damageText =
             textObj.GetComponent<DamageText>();
@@ -131,14 +155,24 @@ public class EnemyStats : MonoBehaviour
 
     void Die()
     {
-        Debug.Log(enemyName + " died.");
+        Debug.Log(
+            enemyName + " died.");
+
+        // GIVE PLAYER EXP
+        PlayerStats player =
+            FindFirstObjectByType<PlayerStats>();
+
+        if (player != null)
+        {
+            player.GainExperience(
+                experienceReward);
+        }
 
         gameObject.SetActive(false);
 
         Invoke(
             nameof(Respawn),
-            respawnTime
-        );
+            respawnTime);
     }
 
     void Respawn()
