@@ -16,10 +16,17 @@ public class LootSlotUI : MonoBehaviour
     public Container parentContainer;
 
     // SLOT INDEX INSIDE CONTAINER
+
     public int slotIndex = -1;
 
     [Header("Auto Find")]
     public bool usePlayerEquipment = false;
+
+    // =====================================
+    // RARITY GLOW
+    // =====================================
+
+    private UIRarityGlow rarityGlow;
 
     // =========================================
     // START
@@ -27,7 +34,16 @@ public class LootSlotUI : MonoBehaviour
 
     private void Start()
     {
+        // GET RARITY GLOW
+
+        if (icon != null)
+        {
+            rarityGlow =
+                icon.GetComponent<UIRarityGlow>();
+        }
+
         // AUTO ASSIGN EQUIPMENT CONTAINER
+
         if (usePlayerEquipment)
         {
             PlayerInventory player =
@@ -52,6 +68,7 @@ public class LootSlotUI : MonoBehaviour
         stack = newStack;
 
         // WRITE INTO REAL CONTAINER
+
         if (
             parentContainer != null &&
             slotIndex >= 0 &&
@@ -64,6 +81,7 @@ public class LootSlotUI : MonoBehaviour
         Refresh();
 
         // UPDATE PLAYER STATS
+
         PlayerStats stats =
             FindFirstObjectByType<PlayerStats>();
 
@@ -79,6 +97,8 @@ public class LootSlotUI : MonoBehaviour
 
     public void Refresh()
     {
+        // INVALID
+
         if (
             parentContainer == null ||
             slotIndex < 0 ||
@@ -92,6 +112,7 @@ public class LootSlotUI : MonoBehaviour
             parentContainer.slots[slotIndex];
 
         // EMPTY
+
         if (
             stack == null ||
             stack.item == null)
@@ -100,16 +121,37 @@ public class LootSlotUI : MonoBehaviour
             return;
         }
 
+        // =====================================
         // ICON
+        // =====================================
+
         if (icon != null)
         {
+            icon.gameObject.SetActive(true);
+
             icon.enabled = true;
 
             icon.sprite =
                 stack.item.icon;
+
+            icon.color =
+                Color.white;
         }
 
+        // =====================================
+        // RARITY GLOW
+        // =====================================
+
+        if (rarityGlow != null)
+        {
+            rarityGlow.rarity =
+                GetDisplayRarity();
+        }
+
+        // =====================================
         // STACK TEXT
+        // =====================================
+
         if (stackText != null)
         {
             if (
@@ -126,6 +168,61 @@ public class LootSlotUI : MonoBehaviour
         }
     }
 
+    // =====================================
+    // DISPLAY RARITY
+    // =====================================
+
+    ItemRarity GetDisplayRarity()
+    {
+        // INVALID
+
+        if (
+            stack == null ||
+            stack.item == null)
+        {
+            return ItemRarity.Common;
+        }
+
+        // NORMAL ITEMS
+
+        if (
+            !stack.item.isContainer ||
+            stack.containerInstance == null)
+        {
+            return stack.rarity;
+        }
+
+        // =================================
+        // BAGS
+        // FIND HIGHEST RARITY INSIDE
+        // =================================
+
+        ItemRarity highest =
+            stack.rarity;
+
+        foreach (
+            ItemStack bagStack
+            in stack.containerInstance.slots)
+        {
+            if (
+                bagStack == null ||
+                bagStack.item == null)
+            {
+                continue;
+            }
+
+            if (
+                (int)bagStack.rarity >
+                (int)highest)
+            {
+                highest =
+                    bagStack.rarity;
+            }
+        }
+
+        return highest;
+    }
+
     // =========================================
     // CLEAR
     // =========================================
@@ -134,12 +231,32 @@ public class LootSlotUI : MonoBehaviour
     {
         stack = null;
 
+        // =====================================
+        // ICON
+        // =====================================
+
         if (icon != null)
         {
+            icon.sprite = null;
+
             icon.enabled = false;
 
-            icon.sprite = null;
+            icon.gameObject.SetActive(false);
         }
+
+        // =====================================
+        // RESET RARITY
+        // =====================================
+
+        if (rarityGlow != null)
+        {
+            rarityGlow.rarity =
+                ItemRarity.Common;
+        }
+
+        // =====================================
+        // STACK TEXT
+        // =====================================
 
         if (stackText != null)
         {

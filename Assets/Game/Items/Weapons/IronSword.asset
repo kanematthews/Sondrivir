@@ -29,7 +29,21 @@ MonoBehaviour:
   twoHanded: 0
   damage: 10
   attackSpeed: 1
+  attackRange: 2
   armor: 0
+  bonusStrength: 0
+  bonusDexterity: 0
+  bonusIntellect: 0
+  bonusVitality: 0
+  bonusHealth: 0
+  bonusMana: 0
+  bonusHPRegen: 0
+  bonusMPRegen: 0
+  bonusCritChance: 0
+  bonusCritDamage: 0
+  bonusMoveSpeed: 0
+  bonusCapacity: 0
+  enablePvp: 0
   requiredStrength: 1
   requiredDexterity: 0
   requiredIntelligence: 0

@@ -94,7 +94,57 @@ public class ItemTooltipUI : MonoBehaviour
         if (itemNameText != null)
         {
             itemNameText.text =
-                item.itemName;
+    item.itemName;
+
+        switch (stack.rarity)
+        {
+            case ItemRarity.Common:
+
+                itemNameText.color =
+                    Color.white;
+
+                break;
+
+            case ItemRarity.Uncommon:
+
+                itemNameText.color =
+                    new Color(
+                        0.4f,
+                        1f,
+                        0.4f);
+
+                break;
+
+            case ItemRarity.Rare:
+
+                itemNameText.color =
+                    new Color(
+                        0.3f,
+                        0.6f,
+                        1f);
+
+                break;
+
+            case ItemRarity.Epic:
+
+                itemNameText.color =
+                    new Color(
+                        0.75f,
+                        0.35f,
+                        1f);
+
+                break;
+
+            case ItemRarity.Legendary:
+
+                itemNameText.color =
+                    new Color(
+                        1f,
+                        0.82f,
+                        0.2f);
+
+                break;
+        }
 
             // STACK COUNT
             if (
@@ -109,7 +159,57 @@ public class ItemTooltipUI : MonoBehaviour
         if (rarityText != null)
         {
             rarityText.text =
-                item.rarity.ToString();
+                stack.rarity.ToString();
+
+            switch (stack.rarity)
+            {
+                case ItemRarity.Common:
+
+                    rarityText.color =
+                        Color.white;
+
+                    break;
+
+                case ItemRarity.Uncommon:
+
+                    rarityText.color =
+                        new Color(
+                            0.4f,
+                            1f,
+                            0.4f);
+
+                    break;
+
+                case ItemRarity.Rare:
+
+                    rarityText.color =
+                        new Color(
+                            0.3f,
+                            0.6f,
+                            1f);
+
+                    break;
+
+                case ItemRarity.Epic:
+
+                    rarityText.color =
+                        new Color(
+                            0.75f,
+                            0.35f,
+                            1f);
+
+                    break;
+
+                case ItemRarity.Legendary:
+
+                    rarityText.color =
+                        new Color(
+                            1f,
+                            0.82f,
+                            0.2f);
+
+                    break;
+            }
         }
 
         if (descriptionText != null)
@@ -338,74 +438,139 @@ public class ItemTooltipUI : MonoBehaviour
 
     void FollowMouse()
     {
-        Vector2 mouse =
-            Input.mousePosition;
+        if (tooltipRoot == null)
+        {
+            return;
+        }
 
-        float width =
+        Canvas canvas =
+            tooltipRoot.GetComponentInParent<Canvas>();
+
+        if (canvas == null)
+        {
+            return;
+        }
+
+        RectTransform canvasRect =
+            canvas.transform as RectTransform;
+
+        Camera cam =
+            canvas.renderMode ==
+            RenderMode.ScreenSpaceOverlay
+            ? null
+            : canvas.worldCamera;
+
+        Vector2 localMousePosition;
+
+        RectTransformUtility
+            .ScreenPointToLocalPointInRectangle(
+                canvasRect,
+                Input.mousePosition,
+                cam,
+                out localMousePosition);
+
+        // =====================================
+        // TOOLTIP SIZE
+        // =====================================
+
+        float tooltipWidth =
             tooltipRoot.rect.width;
 
-        float height =
+        float tooltipHeight =
             tooltipRoot.rect.height;
 
-        float cursorPadding = 18f;
+        // =====================================
+        // CANVAS BOUNDS
+        // =====================================
+
+        float canvasWidth =
+            canvasRect.rect.width;
+
+        float canvasHeight =
+            canvasRect.rect.height;
+
+        // =====================================
+        // OFFSET
+        // =====================================
+
+        float horizontalOffset = 18f;
+
+        float verticalOffset = 18f;
 
         Vector2 position =
-            mouse;
+            localMousePosition;
 
-        // =================================
-        // DEFAULT POSITION
-        // RIGHT + SLIGHTLY DOWN
-        // =================================
+        // =====================================
+        // DEFAULT
+        // RIGHT + BELOW CURSOR
+        // =====================================
 
-        position.x += cursorPadding;
-        position.y -= cursorPadding;
+        position.x += horizontalOffset;
+        position.y -= verticalOffset;
 
-        // =================================
+        // =====================================
         // RIGHT EDGE
-        // FLIP TO LEFT SIDE
-        // =================================
+        // MOVE LEFT OF CURSOR
+        // =====================================
 
-        if (
-            position.x + width >
-            Screen.width)
+        float rightEdge =
+            position.x + tooltipWidth;
+
+        if (rightEdge > canvasWidth * 0.5f)
         {
             position.x =
-                mouse.x -
-                width -
-                cursorPadding;
+                localMousePosition.x -
+                tooltipWidth -
+                horizontalOffset;
         }
 
-        // =================================
-        // BOTTOM EDGE
-        // FLIP ABOVE CURSOR
-        // =================================
+        // =====================================
+        // LEFT EDGE
+        // =====================================
 
-        if (
-            position.y - height <
-            0)
+        float leftEdge =
+            position.x;
+
+        if (leftEdge < -canvasWidth * 0.5f)
+        {
+            position.x =
+                -canvasWidth * 0.5f + 8f;
+        }
+
+        // =====================================
+        // BOTTOM EDGE
+        // MOVE ABOVE CURSOR
+        // =====================================
+
+        float bottomEdge =
+            position.y - tooltipHeight;
+
+        if (bottomEdge < -canvasHeight * 0.5f)
         {
             position.y =
-                mouse.y +
-                height * 0.15f;
+                localMousePosition.y +
+                tooltipHeight +
+                verticalOffset;
         }
 
-        // =================================
-        // HARD CLAMP
-        // =================================
+        // =====================================
+        // TOP EDGE
+        // =====================================
 
-        position.x =
-            Mathf.Clamp(
-                position.x,
-                8f,
-                Screen.width - width - 8f);
+        float topEdge =
+            position.y;
 
-        position.y =
-            Mathf.Clamp(
-                position.y,
-                height + 8f,
-                Screen.height - 8f);
+        if (topEdge > canvasHeight * 0.5f)
+        {
+            position.y =
+                canvasHeight * 0.5f - 8f;
+        }
 
-        tooltipRoot.position =
+        // =====================================
+        // APPLY
+        // =====================================
+
+        tooltipRoot.anchoredPosition =
             position;
     }
 }

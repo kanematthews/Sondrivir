@@ -16,6 +16,7 @@ public class Container : MonoBehaviour
     protected virtual void Awake()
     {
         // CREATE EMPTY SLOTS
+
         for (int i = 0; i < slotCount; i++)
         {
             slots.Add(null);
@@ -23,7 +24,7 @@ public class Container : MonoBehaviour
     }
 
     // =========================================
-    // ADD ITEM
+    // ADD ITEM (BASIC)
     // =========================================
 
     public virtual bool AddItem(
@@ -35,8 +36,37 @@ public class Container : MonoBehaviour
             return false;
         }
 
+        ItemStack stack =
+            new ItemStack();
+
+        stack.item =
+            item;
+
+        stack.amount =
+            amount;
+
+        return AddItem(stack);
+    }
+
+    // =========================================
+    // ADD ITEM STACK
+    // =========================================
+
+    public virtual bool AddItem(
+        ItemStack newStack)
+    {
+        if (
+            newStack == null ||
+            newStack.item == null)
+        {
+            return false;
+        }
+
+        // =====================================
         // STACK FIRST
-        if (item.stackable)
+        // =====================================
+
+        if (newStack.item.stackable)
         {
             for (int i = 0; i < slots.Count; i++)
             {
@@ -45,48 +75,50 @@ public class Container : MonoBehaviour
 
                 if (
                     stack != null &&
-                    stack.item == item)
+                    stack.item ==
+                    newStack.item &&
+                    stack.rarity ==
+                    newStack.rarity)
                 {
-                    stack.amount += amount;
+                    stack.amount +=
+                        newStack.amount;
 
                     return true;
                 }
             }
         }
 
+        // =====================================
         // FIND EMPTY SLOT
+        // =====================================
+
         for (int i = 0; i < slots.Count; i++)
         {
             if (slots[i] == null)
             {
-                ItemStack newStack =
-                    new ItemStack();
-
-                newStack.item =
-                    item;
-
-                newStack.amount =
-                    amount;
-
                 // CREATE BAG CONTAINER
-                if (item.isContainer)
+
+                if (
+                    newStack.item.isContainer &&
+                    newStack.containerInstance == null)
                 {
                     GameObject obj =
                         new GameObject(
-                            item.itemName + "_Container");
+                            newStack.item.itemName +
+                            "_Container");
 
                     ItemContainerInstance container =
                         obj.AddComponent
                         <ItemContainerInstance>();
 
-                    container.Initialize(item);
+                    container.Initialize(
+                        newStack.item);
 
                     newStack.containerInstance =
                         container;
                 }
 
-                slots[i] =
-                    newStack;
+                slots[i] = newStack;
 
                 return true;
             }
@@ -104,6 +136,7 @@ public class Container : MonoBehaviour
         int toSlot)
     {
         // INVALID
+
         if (
             fromSlot < 0 ||
             toSlot < 0 ||
@@ -114,6 +147,7 @@ public class Container : MonoBehaviour
         }
 
         // SAME SLOT
+
         if (fromSlot == toSlot)
         {
             return;
@@ -126,12 +160,14 @@ public class Container : MonoBehaviour
             slots[toSlot];
 
         // NOTHING TO MOVE
+
         if (fromStack == null)
         {
             return;
         }
 
         // EMPTY SLOT
+
         if (toStack == null)
         {
             slots[toSlot] =
@@ -143,11 +179,16 @@ public class Container : MonoBehaviour
             return;
         }
 
+        // =====================================
         // STACK MERGE
+        // =====================================
+
         if (
             fromStack.item ==
             toStack.item &&
-            fromStack.item.stackable)
+            fromStack.item.stackable &&
+            fromStack.rarity ==
+            toStack.rarity)
         {
             toStack.amount +=
                 fromStack.amount;
@@ -158,7 +199,10 @@ public class Container : MonoBehaviour
             return;
         }
 
+        // =====================================
         // SWAP
+        // =====================================
+
         slots[toSlot] =
             fromStack;
 

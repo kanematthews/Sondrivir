@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 225034656698605055}
   - component: {fileID: 7804064629048160191}
   - component: {fileID: 5341862741281318018}
+  - component: {fileID: 2557073599644499892}
   m_Layer: 5
   m_Name: Background
   m_TagString: Untagged
@@ -32,10 +33,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 2330483284617697483}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 48, y: 48}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7804064629048160191
 CanvasRenderer:
@@ -75,6 +76,20 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &2557073599644499892
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3217500497896798697}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
+  m_HorizontalFit: 0
+  m_VerticalFit: 0
 --- !u!1 &4376355687238813241
 GameObject:
   m_ObjectHideFlags: 0
@@ -86,6 +101,7 @@ GameObject:
   - component: {fileID: 4827712873103824895}
   - component: {fileID: 9058346222618391780}
   - component: {fileID: 5384014414938729171}
+  - component: {fileID: 6752608961300389060}
   m_Layer: 5
   m_Name: Icon
   m_TagString: Untagged
@@ -107,10 +123,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 2330483284617697483}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -8, y: -8}
+  m_SizeDelta: {x: 48, y: 48}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &9058346222618391780
 CanvasRenderer:
@@ -132,7 +148,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 2100000, guid: 85716282ff2049d48adbae57628f5f4e, type: 2}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
@@ -150,6 +166,19 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &6752608961300389060
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4376355687238813241}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 97b096ca80567b6438f75db007863ad0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIRarityGlow
+  rarity: 0
 --- !u!1 &8979132504838540428
 GameObject:
   m_ObjectHideFlags: 0
@@ -190,10 +219,10 @@ RectTransform:
   - {fileID: 4827712873103824895}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -8, y: -8}
+  m_SizeDelta: {x: 48, y: 4}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3519144889481170395
 CanvasRenderer:
@@ -295,8 +324,10 @@ MonoBehaviour:
     item: {fileID: 0}
     containerInstance: {fileID: 0}
     amount: 1
+    rarity: 0
   parentContainer: {fileID: 0}
   slotIndex: -1
+  usePlayerEquipment: 0
 --- !u!114 &-610785378544631037
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -309,10 +340,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6c4b80b3e3e28e4baa27b3748d45da0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LootSlotHover
-  stack:
-    item: {fileID: 0}
-    containerInstance: {fileID: 0}
-    amount: 1
 --- !u!114 &8917141053142679567
 MonoBehaviour:
   m_ObjectHideFlags: 0

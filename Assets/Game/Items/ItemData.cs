@@ -38,8 +38,6 @@ public class ItemData : ScriptableObject
 
     public ItemType itemType;
 
-    public ItemRarity rarity;
-
     // =========================================
     // CONTAINER
     // =========================================

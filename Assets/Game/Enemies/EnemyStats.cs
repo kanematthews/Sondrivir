@@ -84,6 +84,7 @@ public class EnemyStats : MonoBehaviour
         SpawnDamageText(amount);
 
         // PASSIVE ENEMIES BECOME AGGRESSIVE
+
         EnemyAI ai =
             GetComponent<EnemyAI>();
 
@@ -93,6 +94,7 @@ public class EnemyStats : MonoBehaviour
         }
 
         // DEAD
+
         if (currentHealth <= 0)
         {
             Die();
@@ -127,6 +129,7 @@ public class EnemyStats : MonoBehaviour
         }
 
         // RANDOM OFFSET
+
         Vector3 randomOffset =
             new Vector3(
                 Random.Range(-0.4f, 0.4f),
@@ -134,6 +137,7 @@ public class EnemyStats : MonoBehaviour
                 0f);
 
         // SPAWN POSITION
+
         Vector3 spawnPosition =
             damageTextSpawnPoint.position +
             randomOffset;
@@ -145,6 +149,7 @@ public class EnemyStats : MonoBehaviour
                 Quaternion.identity);
 
         // MAKE TEXT RED
+
         TMPro.TextMeshPro text =
             textObj.GetComponent
             <TMPro.TextMeshPro>();
@@ -175,6 +180,7 @@ public class EnemyStats : MonoBehaviour
         }
 
         // SPAWN BAG
+
         GameObject bagObj =
             Instantiate(
                 lootBagPrefab,
@@ -185,6 +191,7 @@ public class EnemyStats : MonoBehaviour
                     0f));
 
         // GET LOOT BAG
+
         LootBag lootBag =
             bagObj.GetComponent<LootBag>();
 
@@ -198,6 +205,7 @@ public class EnemyStats : MonoBehaviour
         bool hasLoot = false;
 
         // ROLL LOOT TABLE
+
         foreach (LootDrop drop in lootTable)
         {
             double roll =
@@ -210,10 +218,55 @@ public class EnemyStats : MonoBehaviour
                         drop.minAmount,
                         drop.maxAmount + 1);
 
+                // =============================
+                // CREATE ITEM STACK
+                // =============================
+
+                ItemStack stack =
+                    new ItemStack();
+
+                stack.item =
+                    drop.item;
+
+                stack.amount =
+                    amount;
+
+                // =============================
+                // ONLY THESE TYPES
+                // CAN ROLL RARITY
+                // =============================
+
+                bool canRollRarity =
+                    drop.item.itemType ==
+                    ItemType.Weapon ||
+
+                    drop.item.itemType ==
+                    ItemType.Armor ||
+
+                    drop.item.itemType ==
+                    ItemType.Bag;
+
+                // =============================
+                // GENERATE RARITY
+                // =============================
+
+                if (canRollRarity)
+                {
+                    stack.rarity =
+                        RollItemRarity();
+                }
+                else
+                {
+                    stack.rarity =
+                        ItemRarity.Common;
+                }
+
+                // =============================
+                // ADD TO LOOT BAG
+                // =============================
+
                 bool added =
-                    lootBag.AddItem(
-                        drop.item,
-                        amount);
+                    lootBag.AddItem(stack);
 
                 if (added)
                 {
@@ -223,10 +276,54 @@ public class EnemyStats : MonoBehaviour
         }
 
         // DESTROY EMPTY BAG
+
         if (!hasLoot)
         {
             Destroy(bagObj);
         }
+    }
+
+    // =========================================
+    // ITEM RARITY
+    // =========================================
+
+    ItemRarity RollItemRarity()
+    {
+        // 95% COMMON
+
+        float rarityRoll =
+            Random.Range(0f, 100f);
+
+        if (rarityRoll > 5f)
+        {
+            return ItemRarity.Common;
+        }
+
+        // 5% RARITY TABLE
+
+        float tierRoll =
+            Random.Range(0f, 100f);
+
+        // 75%
+        if (tierRoll <= 75f)
+        {
+            return ItemRarity.Uncommon;
+        }
+
+        // 20%
+        if (tierRoll <= 95f)
+        {
+            return ItemRarity.Rare;
+        }
+
+        // 4%
+        if (tierRoll <= 99f)
+        {
+            return ItemRarity.Epic;
+        }
+
+        // 1%
+        return ItemRarity.Legendary;
     }
 
     // =========================================
@@ -239,9 +336,11 @@ public class EnemyStats : MonoBehaviour
             enemyName + " died.");
 
         // SPAWN LOOT BAG
+
         SpawnLootBag();
 
         // GIVE PLAYER EXP
+
         PlayerStats player =
             FindFirstObjectByType<PlayerStats>();
 
