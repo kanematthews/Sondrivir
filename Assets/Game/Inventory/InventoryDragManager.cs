@@ -19,12 +19,20 @@ public class InventoryDragManager : MonoBehaviour
 
     private bool isDragging = false;
 
+    // =========================================
+    // AWAKE
+    // =========================================
+
     void Awake()
     {
         instance = this;
 
         ClearDrag();
     }
+
+    // =========================================
+    // UPDATE
+    // =========================================
 
     void Update()
     {
@@ -66,7 +74,7 @@ public class InventoryDragManager : MonoBehaviour
 
         isDragging = true;
 
-        // SHOW DRAG ICON
+        // DRAG ICON
         if (dragIcon != null)
         {
             dragIcon.enabled = true;
@@ -117,34 +125,66 @@ public class InventoryDragManager : MonoBehaviour
         ItemStack targetStack =
             targetContainer.slots[targetSlotIndex];
 
-            // PREVENT PUTTING BAG INSIDE ITSELF
-            if (
-                sourceStack.item != null &&
-                sourceStack.item.isContainer &&
-                sourceStack.containerInstance != null)
-            {
-                if (
-                    targetContainer ==
-                    sourceStack.containerInstance)
-                {
-                    Debug.Log(
-                        "Cannot place a bag inside itself.");
-
-                    ClearDrag();
-
-                    return;
-                }
-            }
-
-        // SOURCE GONE
-        if (sourceStack == null)
+        // INVALID
+        if (
+            sourceStack == null ||
+            sourceStack.item == null)
         {
             ClearDrag();
 
             return;
         }
 
+        // =====================================
+        // BAG INSIDE ITSELF
+        // =====================================
+
+        if (
+            sourceStack.item.isContainer &&
+            sourceStack.containerInstance != null)
+        {
+            if (
+                targetContainer ==
+                sourceStack.containerInstance)
+            {
+                Debug.Log(
+                    "Cannot place a bag inside itself.");
+
+                ClearDrag();
+
+                return;
+            }
+        }
+
+        // =====================================
+        // EQUIPMENT VALIDATION
+        // =====================================
+
+        EquipmentContainer equipment =
+            targetContainer as EquipmentContainer;
+
+        if (equipment != null)
+        {
+            bool canEquip =
+                equipment.CanPlaceItem(
+                    targetSlotIndex,
+                    sourceStack);
+
+            if (!canEquip)
+            {
+                Debug.Log(
+                    "Cannot equip item there.");
+
+                ClearDrag();
+
+                return;
+            }
+        }
+
+        // =====================================
         // EMPTY SLOT
+        // =====================================
+
         if (targetStack == null)
         {
             targetContainer.slots[targetSlotIndex] =
@@ -154,7 +194,10 @@ public class InventoryDragManager : MonoBehaviour
                 null;
         }
 
+        // =====================================
         // STACK MERGE
+        // =====================================
+
         else if (
             sourceStack.item ==
             targetStack.item &&
@@ -167,7 +210,10 @@ public class InventoryDragManager : MonoBehaviour
                 null;
         }
 
+        // =====================================
         // SWAP
+        // =====================================
+
         else
         {
             targetContainer.slots[targetSlotIndex] =
@@ -177,7 +223,16 @@ public class InventoryDragManager : MonoBehaviour
                 targetStack;
         }
 
-        // REFRESH UI
+        // =====================================
+        // REFRESH SLOT UIS
+        // =====================================
+
+        RefreshAllSlots();
+
+        // =====================================
+        // REFRESH CONTAINER UIS
+        // =====================================
+
         if (InventoryUI.instance != null)
         {
             InventoryUI.instance.Refresh();
@@ -187,13 +242,29 @@ public class InventoryDragManager : MonoBehaviour
         {
             LootUI.instance.Refresh();
         }
+
         if (NestedContainerManager.instance != null)
         {
             NestedContainerManager.instance
                 .RefreshAll();
         }
 
+        // =====================================
+        // RECALCULATE PLAYER STATS
+        // =====================================
+
+        PlayerStats stats =
+            FindFirstObjectByType<PlayerStats>();
+
+        if (stats != null)
+        {
+            stats.RecalculateStats();
+        }
+
+        // =====================================
         // DESTROY EMPTY LOOT BAG
+        // =====================================
+
         LootBag lootBag =
             sourceContainer as LootBag;
 
@@ -206,6 +277,7 @@ public class InventoryDragManager : MonoBehaviour
                 if (stack != null)
                 {
                     empty = false;
+
                     break;
                 }
             }
@@ -225,6 +297,22 @@ public class InventoryDragManager : MonoBehaviour
         Debug.Log("Drop Complete");
 
         ClearDrag();
+    }
+
+    // =========================================
+    // REFRESH ALL SLOTS
+    // =========================================
+
+    void RefreshAllSlots()
+    {
+        LootSlotUI[] allSlots =
+            FindObjectsByType<LootSlotUI>(
+                FindObjectsSortMode.None);
+
+        foreach (LootSlotUI slot in allSlots)
+        {
+            slot.Refresh();
+        }
     }
 
     // =========================================

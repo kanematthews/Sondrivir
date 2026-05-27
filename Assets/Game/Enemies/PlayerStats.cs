@@ -12,21 +12,78 @@ public class PlayerStats : MonoBehaviour
 
     public int statPoints = 0;
 
-    [Header("Primary Stats")]
-    public int strength = 5;
+    // =====================================
+    // BASE STATS
+    // =====================================
 
-    public int dexterity = 5;
+    [Header("Base Stats")]
+    public int baseStrength = 1;
 
-    public int intellect = 5;
+    public int baseDexterity = 1;
 
-    public int vitality = 5;
+    public int baseIntellect = 1;
 
-    // HOW MUCH WEIGHT PLAYER CAN CARRY
+    public int baseVitality = 1;
+
+    // =====================================
+    // FINAL STATS
+    // =====================================
+
+    [Header("Final Stats")]
+    public int strength;
+
+    public int dexterity;
+
+    public int intellect;
+
+    public int vitality;
+
+    // =====================================
+    // COMBAT
+    // =====================================
+
+    [Header("Combat")]
+    public int baseDamage = 1;
+
+    public int defense = 0;
+
+    public float attackSpeed = 1f;
+
+    public float attackRange = 2f;
+
+    public float critChance = 0f;
+
+    public float critDamage = 1.5f;
+
+    // =====================================
+    // MOVEMENT
+    // =====================================
+
+    [Header("Movement")]
+    public float moveSpeed = 5f;
+
     public float capacity = 50f;
 
-    public int hpRegen = 1;
+    // =====================================
+    // REGEN
+    // =====================================
 
-    public int mpRegen = 1;
+    [Header("Regeneration")]
+    public int hpRegenAmount = 1;
+
+    public int mpRegenAmount = 1;
+
+    public float hpRegenInterval = 30f;
+
+    public float mpRegenInterval = 10f;
+
+    private float hpTimer;
+
+    private float mpTimer;
+
+    // =====================================
+    // RESOURCES
+    // =====================================
 
     [Header("Resources")]
     public int maxHealth;
@@ -37,29 +94,36 @@ public class PlayerStats : MonoBehaviour
 
     public int currentMana;
 
-    [Header("Combat")]
-    public int defense = 0;
-
-    // 1 = melee range
-    public float attackRange = 2f;
-
-    // 1 = one attack per second
-    public float attackSpeed = 1f;
-
-    public float moveSpeed = 5f;
+    // =====================================
+    // SPECIAL
+    // =====================================
 
     public bool pvpEnabled = false;
 
-    [Header("Damage")]
-    public int baseDamage = 10;
+    // =====================================
+    // UI
+    // =====================================
 
     [Header("UI")]
     public Image healthFill;
 
     public Image manaFill;
 
+    // =====================================
+    // REFERENCES
+    // =====================================
+
+    private EquipmentContainer equipment;
+
+    // =====================================
+    // START
+    // =====================================
+
     void Start()
     {
+        equipment =
+            GetComponent<EquipmentContainer>();
+
         RecalculateStats();
 
         currentHealth = maxHealth;
@@ -71,36 +135,191 @@ public class PlayerStats : MonoBehaviour
         UpdateManaUI();
     }
 
+    // =====================================
+    // UPDATE
+    // =====================================
+
     void Update()
     {
+        HandleRegeneration();
+
         UpdateHealthUI();
 
         UpdateManaUI();
     }
 
+    // =====================================
+    // REGEN
+    // =====================================
+
+    void HandleRegeneration()
+    {
+        hpTimer += Time.deltaTime;
+
+        if (hpTimer >= hpRegenInterval)
+        {
+            hpTimer = 0f;
+
+            Heal(hpRegenAmount);
+        }
+
+        mpTimer += Time.deltaTime;
+
+        if (mpTimer >= mpRegenInterval)
+        {
+            mpTimer = 0f;
+
+            RestoreMana(mpRegenAmount);
+        }
+    }
+
+    // =====================================
+    // RECALCULATE STATS
+    // =====================================
+
     public void RecalculateStats()
     {
-        // HEALTH
+        // RESET PRIMARYS
+
+        strength = baseStrength;
+
+        dexterity = baseDexterity;
+
+        intellect = baseIntellect;
+
+        vitality = baseVitality;
+
+        // RESET COMBAT
+
+        baseDamage = 1;
+
+        defense = 0;
+
+        attackSpeed = 1f;
+
+        attackRange = 2f;
+
+        critChance = 0f;
+
+        critDamage = 1.5f;
+
+        // RESET SECONDARYS
+
+        moveSpeed = 5f;
+
+        capacity = 50f;
+
+        hpRegenAmount = 1;
+
+        mpRegenAmount = 1;
+
+        pvpEnabled = false;
+
+        // RESET RESOURCES
+
         maxHealth =
             100 + (vitality * 20);
 
-        // MANA
         maxMana =
             100 + (intellect * 15);
 
-        // MOVE SPEED
-        moveSpeed =
-            5f + (dexterity * 0.05f);
+        // =================================
+        // EQUIPMENT
+        // =================================
 
-        // CAPACITY
-        capacity =
-            50f + (strength * 10f);
+        if (equipment != null)
+        {
+            foreach (ItemStack stack in equipment.slots)
+            {
+                if (
+                    stack == null ||
+                    stack.item == null)
+                {
+                    continue;
+                }
 
-        // ATTACK SPEED
-        // 1 = once per second
-        attackSpeed = 1f;
+                ItemData item =
+                    stack.item;
 
-        // KEEP CURRENT VALUES VALID
+                // PRIMARYS
+
+                strength +=
+                    item.bonusStrength;
+
+                dexterity +=
+                    item.bonusDexterity;
+
+                intellect +=
+                    item.bonusIntellect;
+
+                vitality +=
+                    item.bonusVitality;
+
+                // ARMOR
+
+                defense +=
+                    item.armor;
+
+                // MAINHAND DEFINES WEAPON
+
+                if (
+                    item.equipmentSlotType ==
+                    EquipmentSlotType.MainHand)
+                {
+                    baseDamage =
+                        item.damage;
+
+                    attackSpeed =
+                        item.attackSpeed;
+
+                    attackRange =
+                        item.attackRange;
+                }
+
+                // BONUS COMBAT
+                // TEMPORARILY DISABLED
+                // UNTIL UNITY FULLY RECOMPILES
+
+                // RESOURCES
+
+                maxHealth +=
+                    item.bonusHealth;
+
+                maxMana +=
+                    item.bonusMana;
+
+                // REGEN
+
+                hpRegenAmount +=
+                    item.bonusHPRegen;
+
+                mpRegenAmount +=
+                    item.bonusMPRegen;
+
+                // MOVEMENT
+
+                moveSpeed +=
+                    item.bonusMoveSpeed;
+
+                capacity +=
+                    item.bonusCapacity;
+
+                // SPECIAL
+
+                if (item.enablePvp)
+                {
+                    pvpEnabled = true;
+                }
+            }
+        }
+
+        // FINAL DAMAGE
+
+        baseDamage +=
+            strength * 2;
+
+        // CLAMP
+
         currentHealth =
             Mathf.Clamp(
                 currentHealth,
@@ -116,24 +335,30 @@ public class PlayerStats : MonoBehaviour
         UpdateHealthUI();
 
         UpdateManaUI();
+
+        Debug.Log(
+            "Stats Recalculated | " +
+            "DMG: " + baseDamage +
+            " SPD: " + attackSpeed);
     }
+
+    // =====================================
+    // DAMAGE
+    // =====================================
 
     public int CalculateDamage()
     {
-        // BASE DAMAGE + STRENGTH SCALING
-        int damage =
-            baseDamage +
-            (strength * 2);
-
-        return damage;
+        return baseDamage;
     }
+
+    // =====================================
+    // TAKE DAMAGE
+    // =====================================
 
     public void TakeDamage(int amount)
     {
-        // DEFENSE REDUCTION
         amount -= defense;
 
-        // ALWAYS AT LEAST 1 DAMAGE
         if (amount < 1)
         {
             amount = 1;
@@ -149,25 +374,15 @@ public class PlayerStats : MonoBehaviour
 
         UpdateHealthUI();
 
-        PlayerDamageNotifier notifier =
-            FindFirstObjectByType
-            <PlayerDamageNotifier>();
-
-        if (notifier != null)
-        {
-            notifier.ShowDamage(amount);
-        }
-
-        Debug.Log(
-            "Player took " +
-            amount +
-            " damage.");
-
         if (currentHealth <= 0)
         {
             Die();
         }
     }
+
+    // =====================================
+    // HEAL
+    // =====================================
 
     public void Heal(int amount)
     {
@@ -182,6 +397,10 @@ public class PlayerStats : MonoBehaviour
         UpdateHealthUI();
     }
 
+    // =====================================
+    // RESTORE MANA
+    // =====================================
+
     public void RestoreMana(int amount)
     {
         currentMana += amount;
@@ -195,14 +414,13 @@ public class PlayerStats : MonoBehaviour
         UpdateManaUI();
     }
 
+    // =====================================
+    // EXPERIENCE
+    // =====================================
+
     public void GainExperience(int amount)
     {
         experience += amount;
-
-        Debug.Log(
-            "Gained " +
-            amount +
-            " EXP.");
 
         while (
             experience >=
@@ -215,38 +433,24 @@ public class PlayerStats : MonoBehaviour
         }
     }
 
+    // =====================================
+    // LEVEL UP
+    // =====================================
+
     void LevelUp()
     {
         level++;
 
         statPoints += 3;
 
-        // EXP SCALING
-        experienceToNextLevel *= 3;
-
-        Debug.Log(
-            "LEVEL UP! Level " +
-            level);
+        experienceToNextLevel *= 2;
 
         RecalculateStats();
-
-        // FIND NOTIFIER LIVE
-        LevelUpNotifier notifier =
-            FindFirstObjectByType
-            <LevelUpNotifier>();
-
-        if (notifier != null)
-        {
-            notifier.ShowLevelUpMessage(
-                level,
-                statPoints);
-        }
-        else
-        {
-            Debug.LogWarning(
-                "No LevelUpNotifier found!");
-        }
     }
+
+    // =====================================
+    // HEALTH UI
+    // =====================================
 
     void UpdateHealthUI()
     {
@@ -258,6 +462,10 @@ public class PlayerStats : MonoBehaviour
         }
     }
 
+    // =====================================
+    // MANA UI
+    // =====================================
+
     void UpdateManaUI()
     {
         if (manaFill != null)
@@ -267,6 +475,10 @@ public class PlayerStats : MonoBehaviour
                 maxMana;
         }
     }
+
+    // =====================================
+    // DIE
+    // =====================================
 
     void Die()
     {

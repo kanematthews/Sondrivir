@@ -3,127 +3,124 @@ using UnityEngine.UI;
 
 public class ContainerUI : MonoBehaviour
 {
+    [Header("Container")]
+    public Container container;
+
     [Header("UI")]
-    public Transform slotContainer;
+    public Transform slotParent;
 
     public GameObject slotPrefab;
 
-    [HideInInspector]
-    public Container container;
-
+    // =====================================
     // GRID SETTINGS
-    private int columns = 4;
+    // =====================================
 
-    private float cellSize = 40f;
+    [Header("Grid")]
+    public int columns = 4;
 
-    private float spacing = 4f;
+    public float cellSize = 40f;
 
-    private float padding = 16f;
+    public float spacing = 4f;
+
+    public float padding = 16f;
+
+    // =====================================
+    // START
+    // =====================================
+
+    void Start()
+    {
+        Refresh();
+    }
+
+    // =====================================
+    // REFRESH
+    // =====================================
 
     public void Refresh()
     {
-        // CLEAR OLD
-        foreach (Transform child in slotContainer)
+        // CLEAR OLD SLOTS
+
+        foreach (Transform child in slotParent)
         {
             Destroy(child.gameObject);
         }
 
-        if (container == null)
+        // INVALID
+
+        if (
+            container == null ||
+            container.slots == null)
         {
             return;
         }
 
         // CREATE SLOTS
-        for (int i = 0; i < container.slotCount; i++)
+
+        for (int i = 0; i < container.slots.Count; i++)
         {
             GameObject slot =
                 Instantiate(
                     slotPrefab,
-                    slotContainer);
+                    slotParent);
 
             LootSlotUI slotUI =
                 slot.GetComponent<LootSlotUI>();
 
-            ItemStack stack =
-                container.slots[i];
+            if (slotUI == null)
+            {
+                continue;
+            }
 
             // SLOT INFO
+
             slotUI.slotIndex = i;
 
             slotUI.parentContainer =
                 container;
 
-            // EMPTY SLOT
-            if (stack == null)
-            {
-                slotUI.icon.enabled = false;
+            // REFRESH SLOT
 
-                continue;
-            }
-
-            // ICON
-            slotUI.icon.enabled = true;
-
-            slotUI.icon.sprite =
-                stack.item.icon;
-
-            slotUI.stack =
-                stack;
-
-            // STACK TEXT
-            if (slotUI.stackText != null)
-            {
-                if (stack.amount > 1)
-                {
-                    slotUI.stackText.text =
-                        stack.amount.ToString();
-                }
-                else
-                {
-                    slotUI.stackText.text = "";
-                }
-            }
-
-            // TOOLTIP
-            LootSlotHover hover =
-                slot.GetComponent<LootSlotHover>();
-
-            if (hover != null)
-            {
-                hover.stack = stack;
-            }
+            slotUI.Refresh();
         }
 
         ResizeWindow();
     }
 
-    // =========================================
+    // =====================================
     // RESIZE WINDOW
-    // =========================================
+    // =====================================
 
     void ResizeWindow()
     {
         RectTransform rect =
             GetComponent<RectTransform>();
 
-        if (rect == null)
+        if (
+            rect == null ||
+            container == null ||
+            container.slots == null)
         {
             return;
         }
 
         // CALCULATE ROWS
+
         int rows =
             Mathf.CeilToInt(
-                (float)container.slotCount /
+                (float)container.slots.Count /
                 columns);
 
         // CALCULATE HEIGHT
+
         float height =
             padding +
             (rows * cellSize) +
-            ((rows - 1) * spacing);
+            ((rows - 1) * spacing) +
+            padding;
 
-        // APPLY HEIGHT
+        // APPLY
+
         rect.sizeDelta =
             new Vector2(
                 rect.sizeDelta.x,

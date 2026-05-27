@@ -17,15 +17,19 @@ MonoBehaviour:
   description: Pointy!
   itemType: 0
   rarity: 0
+  isContainer: 0
+  containerSlots: 0
   icon: {fileID: 21300000, guid: c04c61e329e43b04ead7d57f388802e0, type: 3}
   goldValue: 20
   weight: 15
   stackable: 0
   maxStack: 0
   equippable: 1
+  equipmentSlotType: 6
   twoHanded: 0
   damage: 10
   attackSpeed: 1
-  requiredStrength: 5
+  armor: 0
+  requiredStrength: 1
   requiredDexterity: 0
-  requiredIntellect: 0
+  requiredIntelligence: 0

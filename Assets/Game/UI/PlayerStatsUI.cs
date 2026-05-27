@@ -13,36 +13,65 @@ public class PlayerStatsUI : MonoBehaviour
     private Dictionary<string, StatRowUI> rows =
         new Dictionary<string, StatRowUI>();
 
+    // =========================================
+    // STAT ORDER
+    // =========================================
+
     private readonly string[] statOrder =
     {
         "Level",
         "EXP",
         "Stat Points",
+
         "Health",
         "Mana",
+
         "Damage",
+        "Attack Speed",
+        "Attack Range",
+
         "Strength",
         "Dexterity",
         "Intellect",
+        "Vitality",
+
         "Defense",
+
         "Capacity",
-        "Range",
+
         "HP Regen",
         "MP Regen",
-        "Atk Speed",
+
         "Move Speed",
+
+        "Crit Chance",
+
         "PvP Status"
     };
+
+    // =========================================
+    // START
+    // =========================================
 
     void Start()
     {
         GenerateRows();
     }
 
+    // =========================================
+    // UPDATE
+    // =========================================
+
     void Update()
     {
         if (playerStats == null)
+        {
             return;
+        }
+
+        // =====================================
+        // PROGRESSION
+        // =====================================
 
         Set(
             "Level",
@@ -58,6 +87,10 @@ public class PlayerStatsUI : MonoBehaviour
             "Stat Points",
             playerStats.statPoints.ToString());
 
+        // =====================================
+        // RESOURCES
+        // =====================================
+
         Set(
             "Health",
             playerStats.currentHealth +
@@ -70,10 +103,27 @@ public class PlayerStatsUI : MonoBehaviour
             "/" +
             playerStats.maxMana);
 
+        // =====================================
+        // COMBAT
+        // =====================================
+
         Set(
             "Damage",
-            playerStats.CalculateDamage()
-            .ToString());
+            playerStats.CalculateDamage().ToString());
+
+        Set(
+            "Attack Speed",
+            playerStats.attackSpeed
+            .ToString("F2"));
+
+        Set(
+            "Attack Range",
+            playerStats.attackRange
+            .ToString("F1"));
+
+        // =====================================
+        // PRIMARY STATS
+        // =====================================
 
         Set(
             "Strength",
@@ -88,53 +138,75 @@ public class PlayerStatsUI : MonoBehaviour
             playerStats.intellect.ToString());
 
         Set(
+            "Vitality",
+            playerStats.vitality.ToString());
+
+        // =====================================
+        // DEFENSE
+        // =====================================
+
+        Set(
             "Defense",
             playerStats.defense.ToString());
 
+        // =====================================
+        // CAPACITY
+        // =====================================
+
         PlayerInventory inventory =
-        playerStats.GetComponent
-        <PlayerInventory>();
+            playerStats.GetComponent<PlayerInventory>();
 
-    float currentWeight = 0f;
+        float currentWeight = 0f;
 
-    if (inventory != null)
-    {
-        currentWeight =
-            inventory.GetCurrentWeight();
-    }
+        if (inventory != null)
+        {
+            currentWeight =
+                inventory.GetCurrentWeight();
+        }
 
-    float remainingCapacity =
-        playerStats.capacity -
-        currentWeight;
-
-    Set(
-        "Capacity",
-        remainingCapacity.ToString("0.0") +
-        "/" +
-        playerStats.capacity.ToString("0.0"));
+        float remainingCapacity =
+            playerStats.capacity -
+            currentWeight;
 
         Set(
-            "Range",
-            playerStats.attackRange
-            .ToString("F1"));
+            "Capacity",
+            remainingCapacity.ToString("0.0") +
+            "/" +
+            playerStats.capacity.ToString("0.0"));
+
+        // =====================================
+        // REGEN
+        // =====================================
 
         Set(
             "HP Regen",
-            playerStats.hpRegen.ToString());
+            playerStats.hpRegenAmount.ToString());
 
         Set(
             "MP Regen",
-            playerStats.mpRegen.ToString());
+            playerStats.mpRegenAmount.ToString());
 
-        Set(
-            "Atk Speed",
-            playerStats.attackSpeed
-            .ToString("F1"));
+        // =====================================
+        // MOVEMENT
+        // =====================================
 
         Set(
             "Move Speed",
             playerStats.moveSpeed
             .ToString("F1"));
+
+        // =====================================
+        // CRITS
+        // =====================================
+
+        Set(
+            "Crit Chance",
+            (playerStats.critChance * 100f)
+            .ToString("F0") + "%");
+
+        // =====================================
+        // PVP
+        // =====================================
 
         Set(
             "PvP Status",
@@ -144,6 +216,10 @@ public class PlayerStatsUI : MonoBehaviour
 
         RefreshButtons();
     }
+
+    // =========================================
+    // GENERATE ROWS
+    // =========================================
 
     void GenerateRows()
     {
@@ -169,15 +245,25 @@ public class PlayerStatsUI : MonoBehaviour
         }
     }
 
+    // =========================================
+    // SET VALUE
+    // =========================================
+
     void Set(
         string stat,
         string value)
     {
-        if (rows.ContainsKey(stat))
+        if (
+            rows.ContainsKey(stat) &&
+            rows[stat] != null)
         {
             rows[stat].SetValue(value);
         }
     }
+
+    // =========================================
+    // REFRESH BUTTONS
+    // =========================================
 
     void RefreshButtons()
     {

@@ -58,7 +58,7 @@ public class NowPlayingPanelGenerator : MonoBehaviour
             true;
 
         audioSource.volume =
-            0.7f;
+            0.4f;
 
         audioSource.Play();
 

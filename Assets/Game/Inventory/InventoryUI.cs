@@ -13,12 +13,20 @@ public class InventoryUI : MonoBehaviour
 
     private PlayerInventory inventory;
 
+    // =====================================
+    // AWAKE
+    // =====================================
+
     void Awake()
     {
         instance = this;
 
         Close();
     }
+
+    // =====================================
+    // START
+    // =====================================
 
     void Start()
     {
@@ -29,9 +37,14 @@ public class InventoryUI : MonoBehaviour
         Refresh();
     }
 
+    // =====================================
+    // UPDATE
+    // =====================================
+
     void Update()
     {
         // TOGGLE INVENTORY
+
         if (Input.GetKeyDown(KeyCode.Tab))
         {
             if (window.activeSelf)
@@ -45,6 +58,10 @@ public class InventoryUI : MonoBehaviour
         }
     }
 
+    // =====================================
+    // OPEN
+    // =====================================
+
     public void Open()
     {
         window.SetActive(true);
@@ -52,14 +69,23 @@ public class InventoryUI : MonoBehaviour
         Refresh();
     }
 
+    // =====================================
+    // CLOSE
+    // =====================================
+
     public void Close()
     {
         window.SetActive(false);
     }
 
+    // =====================================
+    // REFRESH
+    // =====================================
+
     public void Refresh()
     {
-        // CLEAR OLD SLOTS
+        // CLEAR OLD
+
         foreach (Transform child in slotContainer)
         {
             Destroy(child.gameObject);
@@ -70,7 +96,8 @@ public class InventoryUI : MonoBehaviour
             return;
         }
 
-        // CREATE FIXED INVENTORY SLOTS
+        // CREATE SLOTS
+
         for (int i = 0; i < inventory.slotCount; i++)
         {
             GameObject slot =
@@ -81,60 +108,21 @@ public class InventoryUI : MonoBehaviour
             LootSlotUI slotUI =
                 slot.GetComponent<LootSlotUI>();
 
-            ItemStack stack =
-                inventory.slots[i];
+            if (slotUI == null)
+            {
+                continue;
+            }
 
             // SLOT INFO
+
             slotUI.slotIndex = i;
 
             slotUI.parentContainer =
                 inventory;
 
-            // EMPTY SLOT
-            if (stack == null)
-            {
-                if (
-                    slotUI != null &&
-                    slotUI.icon != null)
-                {
-                    slotUI.icon.enabled = false;
-                }
+            // REFRESH SLOT
 
-                continue;
-            }
-
-            // SHOW ITEM
-            slotUI.icon.enabled = true;
-
-            slotUI.icon.sprite =
-                stack.item.icon;
-
-            slotUI.stack =
-                stack;
-
-            // STACK TEXT
-            if (slotUI.stackText != null)
-            {
-                if (stack.amount > 1)
-                {
-                    slotUI.stackText.text =
-                        stack.amount.ToString();
-                }
-                else
-                {
-                    slotUI.stackText.text = "";
-                }
-            }
-
-            // TOOLTIP
-            LootSlotHover hover =
-                slot.GetComponent<LootSlotHover>();
-
-            if (hover != null)
-            {
-                hover.stack =
-                    stack;
-            }
+            slotUI.Refresh();
         }
     }
 }

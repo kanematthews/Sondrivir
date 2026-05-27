@@ -21,6 +21,10 @@ public class StatRowUI : MonoBehaviour
 
     public float minimumValueX = 70f;
 
+    // =========================================
+    // AWAKE
+    // =========================================
+
     void Awake()
     {
         TMP_Text[] texts =
@@ -28,9 +32,10 @@ public class StatRowUI : MonoBehaviour
 
         foreach (TMP_Text text in texts)
         {
-            // IGNORE BUTTON TEXT
             if (text.transform.parent.name == "Button")
+            {
                 continue;
+            }
 
             if (labelText == null)
             {
@@ -46,6 +51,10 @@ public class StatRowUI : MonoBehaviour
             GetComponentInChildren<Button>(true);
     }
 
+    // =========================================
+    // SETUP
+    // =========================================
+
     public void Setup(
         string label,
         string value,
@@ -59,6 +68,10 @@ public class StatRowUI : MonoBehaviour
 
         RefreshButton();
     }
+
+    // =========================================
+    // SET ROW
+    // =========================================
 
     public void SetRow(
         string label,
@@ -80,30 +93,38 @@ public class StatRowUI : MonoBehaviour
         AdjustSpacing();
     }
 
+    // =========================================
+    // SET VALUE
+    // =========================================
+
     public void SetValue(
         string value)
     {
         if (valueText == null)
+        {
             return;
+        }
 
         valueText.text =
             value;
     }
 
+    // =========================================
+    // REFRESH BUTTON
+    // =========================================
+
     public void RefreshButton()
     {
         if (addButton == null)
+        {
             return;
+        }
 
         bool canUpgrade =
             statName == "Strength" ||
             statName == "Dexterity" ||
             statName == "Intellect" ||
-            statName == "Health" ||
-            statName == "Mana" ||
-            statName == "Capacity" ||
-            statName == "HP Regen" ||
-            statName == "MP Regen";
+            statName == "Vitality";
 
         addButton.gameObject.SetActive(
             canUpgrade &&
@@ -115,39 +136,41 @@ public class StatRowUI : MonoBehaviour
             IncreaseStat);
     }
 
+    // =========================================
+    // INCREASE STAT
+    // =========================================
+
     void IncreaseStat()
     {
         if (playerStats.statPoints <= 0)
+        {
             return;
+        }
 
         switch (statName)
         {
             case "Strength":
-                playerStats.strength++;
+
+                playerStats.baseStrength++;
+
                 break;
 
             case "Dexterity":
-                playerStats.dexterity++;
+
+                playerStats.baseDexterity++;
+
                 break;
 
             case "Intellect":
-                playerStats.intellect++;
+
+                playerStats.baseIntellect++;
+
                 break;
 
-            case "Health":
-                playerStats.vitality++;
-                break;
+            case "Vitality":
 
-            case "Mana":
-                playerStats.intellect++;
-                break;
+                playerStats.baseVitality++;
 
-            case "HP Regen":
-                playerStats.hpRegen++;
-                break;
-
-            case "MP Regen":
-                playerStats.mpRegen++;
                 break;
         }
 
@@ -157,6 +180,10 @@ public class StatRowUI : MonoBehaviour
 
         RefreshButton();
     }
+
+    // =========================================
+    // ADJUST SPACING
+    // =========================================
 
     void AdjustSpacing()
     {

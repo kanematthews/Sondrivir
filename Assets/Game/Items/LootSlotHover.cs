@@ -6,22 +6,58 @@ public class LootSlotHover :
     IPointerEnterHandler,
     IPointerExitHandler
 {
-    public ItemStack stack;
+    private LootSlotUI slotUI;
+
+    // =====================================
+    // AWAKE
+    // =====================================
+
+    void Awake()
+    {
+        slotUI =
+            GetComponent<LootSlotUI>();
+    }
+
+    // =====================================
+    // POINTER ENTER
+    // =====================================
 
     public void OnPointerEnter(
         PointerEventData eventData)
     {
         if (
-            ItemTooltipUI.instance != null &&
-            stack != null)
+            slotUI == null ||
+            slotUI.stack == null ||
+            slotUI.stack.item == null)
+        {
+            return;
+        }
+
+        if (ItemTooltipUI.instance != null)
         {
             ItemTooltipUI.instance.Show(
-                stack);
+                slotUI.stack);
         }
     }
 
+    // =====================================
+    // POINTER EXIT
+    // =====================================
+
     public void OnPointerExit(
         PointerEventData eventData)
+    {
+        if (ItemTooltipUI.instance != null)
+        {
+            ItemTooltipUI.instance.Hide();
+        }
+    }
+
+    // =====================================
+    // DISABLE
+    // =====================================
+
+    void OnDisable()
     {
         if (ItemTooltipUI.instance != null)
         {

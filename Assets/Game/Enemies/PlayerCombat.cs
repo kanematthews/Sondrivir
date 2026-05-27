@@ -2,173 +2,251 @@ using UnityEngine;
 
 public class PlayerCombat : MonoBehaviour
 {
+    [Header("Combat")]
+    public LayerMask enemyLayer;
+
+    public Transform attackPoint;
+
+    [Header("Animation")]
+    public Animator animator;
+
     private PlayerStats playerStats;
 
-    private bool autoAttacking = false;
+    private Targetable currentTarget;
 
-    private float attackTimer = 0f;
+    private float attackTimer;
 
-    private Targetable currentCombatTarget;
-
-    private Animator animator;
+    // =========================================
+    // START
+    // =========================================
 
     void Start()
     {
         playerStats =
             GetComponent<PlayerStats>();
 
-        // FIXED
-        animator =
-            GetComponentInChildren<Animator>();
-    }
-
-    void Update()
-    {
-        HandleInput();
-
-        if (autoAttacking)
+        if (animator == null)
         {
-            attackTimer += Time.deltaTime;
-
-            // 1 = once per second
-            if (
-                attackTimer >=
-                playerStats.attackSpeed)
-            {
-                attackTimer = 0f;
-
-                PerformAttack();
-            }
+            animator =
+                GetComponentInChildren<Animator>();
         }
     }
 
-    void HandleInput()
+    // =========================================
+    // UPDATE
+    // =========================================
+
+    void Update()
     {
+        HandleTargeting();
+
+        HandleAutoAttack();
+    }
+
+    // =========================================
+    // TARGETING
+    // =========================================
+
+    void HandleTargeting()
+    {
+        // RIGHT CLICK
         if (Input.GetMouseButtonDown(1))
         {
             Ray ray =
-                Camera.main
-                .ScreenPointToRay(
+                Camera.main.ScreenPointToRay(
                     Input.mousePosition);
 
             if (
                 Physics.Raycast(
                     ray,
-                    out RaycastHit hit))
+                    out RaycastHit hit,
+                    100f))
             {
                 Targetable target =
-                    hit.collider
-                    .GetComponent<Targetable>();
+                    hit.collider.GetComponent<Targetable>();
 
+                // VALID TARGET
                 if (target != null)
                 {
-                    if (
-                        currentCombatTarget ==
-                        target)
-                    {
-                        return;
-                    }
-
-                    StopAutoAttack();
-
-                    currentCombatTarget =
-                        target;
-
-                    target.SelectTarget();
-
-                    autoAttacking = true;
-
-                    attackTimer = 0f;
-
-                    CombatTargetVisual visual =
-                        target.GetComponent
-                        <CombatTargetVisual>();
-
-                    if (visual != null)
-                    {
-                        visual.StartPulse();
-                    }
+                    SetTarget(target);
                 }
             }
         }
     }
 
-    void PerformAttack()
+    // =========================================
+    // SET TARGET
+    // =========================================
+
+    void SetTarget(Targetable target)
     {
-        if (currentCombatTarget == null)
+        // CLEAR OLD TARGET
+        if (
+            currentTarget != null &&
+            currentTarget.targetRing != null)
         {
-            StopAutoAttack();
+            currentTarget.targetRing.SetActive(false);
+        }
+
+        currentTarget = target;
+
+        Targetable.CurrentTarget =
+            target;
+
+        // ENABLE NEW TARGET RING
+        if (
+            currentTarget != null &&
+            currentTarget.targetRing != null)
+        {
+            currentTarget.targetRing.SetActive(true);
+        }
+
+        Debug.Log(
+            "Targeted: " +
+            currentTarget.name);
+    }
+
+    // =========================================
+    // AUTO ATTACK
+    // =========================================
+
+    void HandleAutoAttack()
+    {
+        // NO TARGET
+        if (currentTarget == null)
+        {
             return;
         }
 
-        EnemyStats enemy =
-            currentCombatTarget
-            .GetComponent<EnemyStats>();
-
-        if (enemy == null)
+        // TARGET DESTROYED
+        if (!currentTarget.gameObject.activeInHierarchy)
         {
-            StopAutoAttack();
+            currentTarget = null;
+
             return;
         }
 
-        // RANGE CHECK
+        // TIMER
+        attackTimer += Time.deltaTime;
+
+        float interval =
+            1f /
+            Mathf.Max(
+                playerStats.attackSpeed,
+                0.01f);
+
+        // WAIT
+        if (attackTimer < interval)
+        {
+            return;
+        }
+
+        attackTimer = 0f;
+
+        Attack(currentTarget);
+    }
+
+    // =========================================
+    // ATTACK
+    // =========================================
+
+    void Attack(Targetable target)
+    {
+        if (target == null)
+        {
+            return;
+        }
+
         float distance =
             Vector3.Distance(
                 transform.position,
-                enemy.transform.position);
+                target.transform.position);
 
-        if (
-            distance >
-            playerStats.attackRange)
+        // OUT OF RANGE
+        if (distance > playerStats.attackRange)
         {
+            Debug.Log("Target out of range.");
+
             return;
         }
 
-        // ATTACK ANIMATION
+        // FACE TARGET
+        Vector3 lookPosition =
+            target.transform.position;
+
+        lookPosition.y =
+            transform.position.y;
+
+        transform.LookAt(lookPosition);
+
+        // PLAY ATTACK ANIMATION
         if (animator != null)
         {
-            animator.ResetTrigger(
-                "Attack");
-
-            animator.SetTrigger(
-                "Attack");
+            animator.SetTrigger("Attack");
         }
 
         // DAMAGE
         int damage =
             playerStats.CalculateDamage();
 
-        enemy.TakeDamage(damage);
+        // CRIT
+        bool crit =
+            Random.value <=
+            playerStats.critChance;
 
-        Debug.Log(
-            "Hit for " +
-            damage);
-
-        if (enemy.currentHealth <= 0)
+        if (crit)
         {
-            StopAutoAttack();
+            damage =
+                Mathf.RoundToInt(
+                    damage *
+                    playerStats.critDamage);
+        }
+
+        // ENEMY
+        EnemyStats enemy =
+            target.GetComponent<EnemyStats>();
+
+        if (enemy != null)
+        {
+            enemy.TakeDamage(damage);
+
+            Debug.Log(
+                "Hit " +
+                enemy.name +
+                " for " +
+                damage +
+                (crit
+                ? " CRITICAL!"
+                : ""));
         }
     }
 
-    public void StopAutoAttack()
+    // =========================================
+    // GIZMOS
+    // =========================================
+
+    void OnDrawGizmosSelected()
     {
-        autoAttacking = false;
-
-        attackTimer = 0f;
-
-        if (currentCombatTarget != null)
+        if (attackPoint == null)
         {
-            CombatTargetVisual visual =
-                currentCombatTarget
-                .GetComponent
-                <CombatTargetVisual>();
-
-            if (visual != null)
-            {
-                visual.StopPulse();
-            }
+            return;
         }
 
-        currentCombatTarget = null;
+        Gizmos.color = Color.red;
+
+        float range = 2f;
+
+        PlayerStats stats =
+            GetComponent<PlayerStats>();
+
+        if (stats != null)
+        {
+            range =
+                stats.attackRange;
+        }
+
+        Gizmos.DrawWireSphere(
+            attackPoint.position,
+            range);
     }
 }

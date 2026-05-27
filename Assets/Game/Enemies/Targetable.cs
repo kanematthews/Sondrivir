@@ -7,35 +7,71 @@ public class Targetable : MonoBehaviour
     [Header("Target Visuals")]
     public GameObject targetRing;
 
-    private void OnMouseDown()
-    {
-        // LEFT CLICK = TARGET
-        if (Input.GetMouseButtonDown(0))
-        {
-            SelectTarget();
-        }
-    }
+    public CombatTargetVisual combatVisual;
+
+    // =========================================
+    // SELECT TARGET
+    // =========================================
 
     public void SelectTarget()
     {
-        // Disable previous target ring
-        if (CurrentTarget != null &&
-            CurrentTarget.targetRing != null)
+        // =====================================
+        // CLEAR PREVIOUS TARGET
+        // =====================================
+
+        if (CurrentTarget != null)
         {
-            CurrentTarget.targetRing.SetActive(false);
+            // RING
+            if (
+                CurrentTarget.targetRing != null)
+            {
+                CurrentTarget
+                    .targetRing
+                    .SetActive(false);
+            }
+
+            // BODY PULSE
+            if (
+                CurrentTarget.combatVisual != null)
+            {
+                CurrentTarget
+                    .combatVisual
+                    .StopPulse();
+            }
         }
 
-        // Set new target
+        // =====================================
+        // SET NEW TARGET
+        // =====================================
+
         CurrentTarget = this;
 
-        // Enable new target ring
+        // =====================================
+        // ENABLE RING
+        // =====================================
+
         if (targetRing != null)
         {
             targetRing.SetActive(true);
         }
 
-        Debug.Log("Targeted: " + gameObject.name);
+        // =====================================
+        // START BODY PULSE
+        // =====================================
+
+        if (combatVisual != null)
+        {
+            combatVisual.StartPulse();
+        }
+
+        Debug.Log(
+            "Targeted: " +
+            gameObject.name);
     }
+
+    // =========================================
+    // ON DISABLE
+    // =========================================
 
     private void OnDisable()
     {
@@ -44,9 +80,16 @@ public class Targetable : MonoBehaviour
             CurrentTarget = null;
         }
 
+        // DISABLE RING
         if (targetRing != null)
         {
             targetRing.SetActive(false);
+        }
+
+        // STOP PULSE
+        if (combatVisual != null)
+        {
+            combatVisual.StopPulse();
         }
     }
 }

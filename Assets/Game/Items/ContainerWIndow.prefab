@@ -226,9 +226,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c71b4eb7ad835e24fa0a588a8df7f17b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ContainerUI
-  slotContainer: {fileID: 4815053540381576919}
-  slotPrefab: {fileID: 8979132504838540428, guid: ebd593b035af58040ab15ad0bb29ae47, type: 3}
   container: {fileID: 0}
+  slotParent: {fileID: 4815053540381576919}
+  slotPrefab: {fileID: 8979132504838540428, guid: ebd593b035af58040ab15ad0bb29ae47, type: 3}
+  columns: 4
+  cellSize: 40
+  spacing: 4
+  padding: 16
 --- !u!114 &5821262034992418676
 MonoBehaviour:
   m_ObjectHideFlags: 0
