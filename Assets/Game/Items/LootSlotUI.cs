@@ -144,8 +144,24 @@ public class LootSlotUI : MonoBehaviour
 
         if (rarityGlow != null)
         {
+            ItemRarity finalRarity =
+                stack.rarity;
+
+            // ONLY LOOT CONTAINERS
+            // NOT PLAYER INVENTORY
+
+            if (
+                stack.containerInstance != null &&
+                parentContainer.containerName
+    .Contains("Loot"))
+            {
+                finalRarity =
+                    stack.containerInstance
+                        .GetHighestRarity();
+            }
+
             rarityGlow.rarity =
-                GetDisplayRarity();
+                finalRarity;
         }
 
         // =====================================

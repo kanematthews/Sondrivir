@@ -13,19 +13,93 @@ MonoBehaviour:
   m_Name: Ellen
   m_EditorClassIdentifier: Assembly-CSharp::NPCDialogueData
   npcName: Ellen
-  greeting: Oh, someone new! Be careful of the area!
-  dialogueChoices:
-  - playerText: Where am I?
-    npcResponse: You're a few miles from Arcanum... Where did you come from?
-    closesDialogue: 0
-    goBackAfterResponse: 0
-  - playerText: Who are you?
-    npcResponse: 'My name is Ellen! I''m a scout around here keeping an eye out for
-      the nearby town of Treason. '
-    closesDialogue: 0
-    goBackAfterResponse: 0
-  - playerText: What do you mean by be careful?
-    npcResponse: Well... This place is littered with strange creatures as of the
-      recent "arcane surges"...
-    closesDialogue: 0
-    goBackAfterResponse: 0
+  startingNodeID: ROOT
+  nodes:
+  - nodeID: ROOT
+    npcText: Ah... Someone new..
+    choices:
+    - playerText: Who are you?
+      nextNodeID: WHO1
+      closesDialogue: 0
+      opensTrade: 0
+      startsQuest: 0
+      questToStart: {fileID: 0}
+      requiredCompletedQuestID: 
+    - playerText: Where Am I?
+      nextNodeID: WHERE1
+      closesDialogue: 0
+      opensTrade: 0
+      startsQuest: 0
+      questToStart: {fileID: 0}
+      requiredCompletedQuestID: 
+    - playerText: Do you need any help with anything?
+      nextNodeID: QUEST1
+      closesDialogue: 0
+      opensTrade: 0
+      startsQuest: 0
+      questToStart: {fileID: 11400000, guid: d7d629b859a0ebf41afed0a8aae2cd8d, type: 2}
+      requiredCompletedQuestID: 
+  - nodeID: WHERE1
+    npcText: We're a little bit south of the capital, Arcanum and few miles from
+      the small town of Treason. Arcanum isn't really the same anymore.
+    choices:
+    - playerText: Why isn't it the same?
+      nextNodeID: MAGES1
+      closesDialogue: 0
+      opensTrade: 0
+      startsQuest: 0
+      questToStart: {fileID: 0}
+      requiredCompletedQuestID: 
+  - nodeID: MAGES1
+    npcText: The damn.. magocracy - all of them are magic obsessed, knowledge rich,
+      introverted assholes.
+    choices:
+    - playerText: Why isn't it the same?
+      nextNodeID: MAGES1
+      closesDialogue: 1
+      opensTrade: 0
+      startsQuest: 0
+      questToStart: {fileID: 0}
+      requiredCompletedQuestID: 
+  - nodeID: QUEST1
+    npcText: Their seems to be some weird boney fellas that have been roaming these
+      woods lately. Don't want some random lumber jack getting killed... take care
+      of them for me?
+    choices:
+    - playerText: Sure!
+      nextNodeID: 
+      closesDialogue: 0
+      opensTrade: 0
+      startsQuest: 1
+      questToStart: {fileID: 11400000, guid: d7d629b859a0ebf41afed0a8aae2cd8d, type: 2}
+      requiredCompletedQuestID: 
+    - playerText: Sure!
+      nextNodeID: 
+      closesDialogue: 0
+      opensTrade: 0
+      startsQuest: 1
+      questToStart: {fileID: 11400000, guid: d7d629b859a0ebf41afed0a8aae2cd8d, type: 2}
+      requiredCompletedQuestID: 
+  - nodeID: QUEST1
+    npcText: Their seems to be some weird boney fellas that have been roaming these
+      woods lately. Don't want some random lumber jack getting killed... take care
+      of them for me?
+    choices:
+    - playerText: Sure!
+      nextNodeID: 
+      closesDialogue: 0
+      opensTrade: 0
+      startsQuest: 1
+      questToStart: {fileID: 11400000, guid: d7d629b859a0ebf41afed0a8aae2cd8d, type: 2}
+      requiredCompletedQuestID: 
+  - nodeID: QUEST1
+    npcText: Ah yeah. Seems to be some weird stuff going on with the air waves or
+      something. -I'm no wizard though.
+    choices:
+    - playerText: Thanks for letting me know.
+      nextNodeID: 
+      closesDialogue: 1
+      opensTrade: 0
+      startsQuest: 1
+      questToStart: {fileID: 11400000, guid: f23d0437bc008d44c8d0aa91d1ead6b3, type: 2}
+      requiredCompletedQuestID: 

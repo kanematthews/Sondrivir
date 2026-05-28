@@ -10,10 +10,10 @@ public class NPCDialogueData
     public string npcName =
         "Villager";
 
-    [TextArea]
-    public string greeting =
-        "Greetings traveler.";
+    [Header("Start")]
+    public string startingNodeID =
+        "ROOT";
 
-    [Header("Dialogue Choices")]
-    public DialogueChoice[] dialogueChoices;
+    [Header("Dialogue Nodes")]
+    public DialogueNode[] nodes;
 }

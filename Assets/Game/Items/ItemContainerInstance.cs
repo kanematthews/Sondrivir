@@ -2,12 +2,21 @@ using UnityEngine;
 
 public class ItemContainerInstance : Container
 {
+    [Header("Source")]
     public ItemData sourceItem;
+
+    // =====================================
+    // AWAKE
+    // =====================================
 
     protected override void Awake()
     {
         base.Awake();
     }
+
+    // =====================================
+    // INITIALIZE
+    // =====================================
 
     public void Initialize(
         ItemData item)
@@ -26,5 +35,50 @@ public class ItemContainerInstance : Container
         {
             slots.Add(null);
         }
+    }
+
+    // =====================================
+    // GET HIGHEST RARITY
+    // =====================================
+
+    public ItemRarity GetHighestRarity()
+    {
+        ItemRarity highest =
+            ItemRarity.Common;
+
+        foreach (ItemStack stack in slots)
+        {
+            // INVALID
+
+            if (
+                stack == null ||
+                stack.item == null)
+            {
+                continue;
+            }
+
+            // DIRECT ITEM
+
+            if (stack.rarity > highest)
+            {
+                highest = stack.rarity;
+            }
+
+            // NESTED BAG CHECK
+
+            if (stack.containerInstance != null)
+            {
+                ItemRarity nestedHighest =
+                    stack.containerInstance
+                        .GetHighestRarity();
+
+                if (nestedHighest > highest)
+                {
+                    highest = nestedHighest;
+                }
+            }
+        }
+
+        return highest;
     }
 }

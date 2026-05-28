@@ -34,6 +34,10 @@ public class NPCDialogueUI : MonoBehaviour
 
     private NPCInteraction currentNPC;
 
+    // CURRENT NODE
+
+    private DialogueNode currentNode;
+
     // =====================================
     // AWAKE
     // =====================================
@@ -102,7 +106,7 @@ public class NPCDialogueUI : MonoBehaviour
     }
 
     // =====================================
-    // OPEN
+    // OPEN DIALOGUE
     // =====================================
 
     public void OpenDialogue(
@@ -121,21 +125,51 @@ public class NPCDialogueUI : MonoBehaviour
 
         dialoguePanel.SetActive(true);
 
-        // NPC INFO
-
         npcNameText.text =
             npc.dialogueData.npcName;
 
-        dialogueText.text =
-            npc.dialogueData.greeting;
+        // LOAD START NODE
 
-        // CLEAR INPUT
+        LoadNode(
+            npc.dialogueData.startingNodeID);
 
         playerInputField.text = "";
+    }
 
-        // GENERATE CHOICES
+    // =====================================
+    // LOAD NODE
+    // =====================================
 
-        GenerateChoices();
+    void LoadNode(
+        string nodeID)
+    {
+        if (
+            currentNPC == null ||
+            currentNPC.dialogueData == null)
+        {
+            return;
+        }
+
+        foreach (
+            DialogueNode node
+            in currentNPC.dialogueData.nodes)
+        {
+            if (node.nodeID == nodeID)
+            {
+                currentNode = node;
+
+                dialogueText.text =
+                    node.npcText;
+
+                GenerateChoices();
+
+                return;
+            }
+        }
+
+        Debug.LogWarning(
+            "Node not found: " +
+            nodeID);
     }
 
     // =====================================
@@ -148,6 +182,8 @@ public class NPCDialogueUI : MonoBehaviour
 
         currentNPC = null;
 
+        currentNode = null;
+
         ClearChoices();
     }
 
@@ -159,24 +195,54 @@ public class NPCDialogueUI : MonoBehaviour
     {
         ClearChoices();
 
-        // INVALID
-
         if (
-            currentNPC == null ||
-            currentNPC.dialogueData == null ||
-            currentNPC.dialogueData.dialogueChoices == null)
+            currentNode == null ||
+            currentNode.choices == null)
         {
             return;
         }
 
-        // CREATE BUTTONS
-
         foreach (
             DialogueChoice choice
-            in currentNPC
-                .dialogueData
-                .dialogueChoices)
+            in currentNode.choices)
         {
+            // =================================
+            // QUEST REQUIREMENTS
+            // =================================
+
+            if (
+                !string.IsNullOrWhiteSpace(
+                    choice.requiredCompletedQuestID))
+            {
+                GameObject player =
+                    GameObject.FindGameObjectWithTag(
+                        "Player");
+
+                if (player != null)
+                {
+                    QuestManager manager =
+                        player.GetComponent
+                        <QuestManager>();
+
+                    if (manager != null)
+                    {
+                        bool completed =
+                            manager.HasCompletedQuest(
+                                choice
+                                .requiredCompletedQuestID);
+
+                        if (!completed)
+                        {
+                            continue;
+                        }
+                    }
+                }
+            }
+
+            // =================================
+            // CREATE BUTTON
+            // =================================
+
             GameObject obj =
                 Instantiate(
                     choiceButtonPrefab,
@@ -224,17 +290,59 @@ public class NPCDialogueUI : MonoBehaviour
             return;
         }
 
-        // NPC RESPONSE
-
-        dialogueText.text =
-            choice.npcResponse;
-
+        // =================================
         // CLOSE
+        // =================================
 
         if (choice.closesDialogue)
         {
             CloseDialogue();
+
+            return;
         }
+
+        // =================================
+        // TRADE
+        // =================================
+
+        if (choice.opensTrade)
+        {
+            Debug.Log(
+                "OPEN TRADE WINDOW");
+        }
+
+        // =================================
+        // QUEST
+        // =================================
+
+        if (
+            choice.startsQuest &&
+            choice.questToStart != null)
+        {
+            GameObject player =
+                GameObject.FindGameObjectWithTag(
+                    "Player");
+
+            if (player != null)
+            {
+                QuestManager manager =
+                    player.GetComponent
+                    <QuestManager>();
+
+                if (manager != null)
+                {
+                    manager.StartQuest(
+                        choice.questToStart);
+                }
+            }
+        }
+
+        // =================================
+        // NEXT NODE
+        // =================================
+
+        LoadNode(
+            choice.nextNodeID);
     }
 
     // =====================================
@@ -260,25 +368,23 @@ public class NPCDialogueUI : MonoBehaviour
             return;
         }
 
-        // BASIC KEYWORDS
+        // SECRET KEYWORDS
 
-        if (input.Contains("quest"))
+        if (input.Contains("cult"))
         {
             dialogueText.text =
-                "I may have work for you soon...";
+                "Keep your voice down...";
         }
-        else if (input.Contains("trade"))
+        else if (input.Contains("ruins"))
         {
             dialogueText.text =
-                "Take a look at my wares.";
+                "The eastern ruins are cursed.";
         }
         else
         {
             dialogueText.text =
                 "I don't know much about that.";
         }
-
-        // CLEAR INPUT
 
         playerInputField.text = "";
     }
