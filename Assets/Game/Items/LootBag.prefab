@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 6107264889589186492}
   - component: {fileID: -8064454530563792895}
   - component: {fileID: 4429117164495349068}
+  - component: {fileID: 6666363650225519675}
   m_Layer: 0
   m_Name: LootBag
   m_TagString: Untagged
@@ -139,5 +140,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f141780ba7be35746a6db5b751c2cfce, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LootBag
-  items: []
+  containerName: Container
+  slotCount: 8
+  slots: []
   despawnTime: 120
+--- !u!114 &6666363650225519675
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1326915626109377653}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
+  GlobalObjectIdHash: 0
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 1
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0

@@ -1,7 +1,8 @@
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class EnemyAI : MonoBehaviour
+public class EnemyAI : NetworkBehaviour
 {
     private NavMeshAgent agent;
 
@@ -9,13 +10,12 @@ public class EnemyAI : MonoBehaviour
 
     private Animator animator;
 
-    private Transform player;
+    private Transform targetPlayer;
 
-    private PlayerStats playerStats;
+    private PlayerStats targetPlayerStats;
 
     [Header("Enemy")]
-    public string enemyID =
-        "skeleton";
+    public string enemyID = "skeleton";
 
     [Header("Roaming")]
     public float roamRadius = 5f;
@@ -39,118 +39,86 @@ public class EnemyAI : MonoBehaviour
 
     private float attackTimer;
 
+    // =====================================
+    // START
+    // =====================================
+
     void Start()
     {
-        agent =
-            GetComponent<NavMeshAgent>();
-
-        enemyStats =
-            GetComponent<EnemyStats>();
-
-        animator =
-            GetComponentInChildren<Animator>();
-
-        PlayerStats foundPlayer =
-            FindFirstObjectByType<PlayerStats>();
-
-        if (foundPlayer != null)
+        // AI only runs on server
+        if (!IsServer)
         {
-            playerStats = foundPlayer;
-
-            player =
-                foundPlayer.transform;
+            enabled = false;
+            return;
         }
 
-        spawnPosition =
-            transform.position;
+        agent       = GetComponent<NavMeshAgent>();
+        enemyStats  = GetComponent<EnemyStats>();
+        animator    = GetComponentInChildren<Animator>();
+        spawnPosition = transform.position;
+        idleTimer     = idleTime;
 
-        idleTimer = idleTime;
+        FindNearestPlayer();
     }
+
+    // =====================================
+    // UPDATE (server only)
+    // =====================================
 
     void Update()
     {
-        // =====================================
-        // DEBUG KILL
-        // PRESS K TO TEST QUESTS
-        // =====================================
-
-        if (Input.GetKeyDown(KeyCode.K))
-        {
-            Die();
-        }
-
         if (
-            player == null ||
-            playerStats == null)
+            targetPlayer == null ||
+            targetPlayerStats == null)
         {
+            FindNearestPlayer();
             return;
         }
 
         float distanceToPlayer =
             Vector3.Distance(
                 transform.position,
-                player.position);
+                targetPlayer.position);
 
         float distanceFromSpawn =
             Vector3.Distance(
                 transform.position,
                 spawnPosition);
 
-        // PASSIVE ENEMIES ONLY AGGRO WHEN HIT
-
-        if (
-            enemyStats.behaviour ==
+        if (enemyStats.behaviour ==
             EnemyBehaviour.Hostile)
         {
-            if (
-                distanceToPlayer <=
+            if (distanceToPlayer <=
                 enemyStats.aggroRange)
             {
                 engaged = true;
             }
         }
 
-        // =====================================
-        // CHASING
-        // =====================================
-
         if (engaged)
         {
             chaseTimer += Time.deltaTime;
 
-            // GIVE UP CONDITIONS
-
             if (
                 distanceFromSpawn >
-                maxChaseDistance ||
-
-                chaseTimer >=
-                giveUpTime)
+                    maxChaseDistance ||
+                chaseTimer >= giveUpTime)
             {
                 ReturnToSpawn();
-
                 return;
             }
 
             agent.isStopped = false;
-
             agent.SetDestination(
-                player.position);
-
-            // WALK ANIMATION
+                targetPlayer.position);
 
             SetMoving(true);
 
-            // ATTACK RANGE
-
-            if (
-                distanceToPlayer <=
+            if (distanceToPlayer <=
                 enemyStats.attackRange)
             {
                 agent.isStopped = true;
-
                 SetMoving(false);
-
                 AttackPlayer();
             }
         }
@@ -161,7 +129,35 @@ public class EnemyAI : MonoBehaviour
     }
 
     // =====================================
-    // HANDLE ROAMING
+    // FIND NEAREST PLAYER
+    // =====================================
+
+    void FindNearestPlayer()
+    {
+        PlayerStats[] players =
+            FindObjectsByType<PlayerStats>(
+                FindObjectsSortMode.None);
+
+        float closest = float.MaxValue;
+
+        foreach (PlayerStats p in players)
+        {
+            float dist =
+                Vector3.Distance(
+                    transform.position,
+                    p.transform.position);
+
+            if (dist < closest)
+            {
+                closest            = dist;
+                targetPlayerStats  = p;
+                targetPlayer       = p.transform;
+            }
+        }
+    }
+
+    // =====================================
+    // ROAMING
     // =====================================
 
     void HandleRoaming()
@@ -171,49 +167,40 @@ public class EnemyAI : MonoBehaviour
         if (idleTimer > 0)
         {
             SetMoving(false);
-
             return;
         }
 
         if (!roaming)
         {
-            Vector3 randomDirection =
+            Vector3 randomDir =
                 Random.insideUnitSphere *
                 roamRadius;
 
-            randomDirection +=
-                spawnPosition;
+            randomDir += spawnPosition;
 
             NavMeshHit hit;
 
-            if (
-                NavMesh.SamplePosition(
-                    randomDirection,
-                    out hit,
-                    roamRadius,
-                    NavMesh.AllAreas))
+            if (NavMesh.SamplePosition(
+                randomDir,
+                out hit,
+                roamRadius,
+                NavMesh.AllAreas))
             {
                 roaming = true;
 
                 agent.isStopped = false;
-
-                agent.SetDestination(
-                    hit.position);
+                agent.SetDestination(hit.position);
 
                 SetMoving(true);
             }
         }
 
-        // REACHED DESTINATION
-
         if (
             roaming &&
             !agent.pathPending &&
-            agent.remainingDistance <=
-            0.5f)
+            agent.remainingDistance <= 0.5f)
         {
-            roaming = false;
-
+            roaming   = false;
             idleTimer = idleTime;
 
             SetMoving(false);
@@ -228,31 +215,19 @@ public class EnemyAI : MonoBehaviour
     {
         attackTimer += Time.deltaTime;
 
-        if (
-            attackTimer >=
-            enemyStats.attackSpeed)
+        if (attackTimer < enemyStats.attackSpeed)
+            return;
+
+        attackTimer = 0f;
+
+        if (animator != null)
         {
-            attackTimer = 0f;
-
-            // ATTACK ANIMATION
-
-            if (animator != null)
-            {
-                animator.ResetTrigger(
-                    "Attack");
-
-                animator.SetTrigger(
-                    "Attack");
-            }
-
-            playerStats.TakeDamage(
-                enemyStats.damage);
-
-            Debug.Log(
-                enemyStats.enemyName +
-                " hit player for " +
-                enemyStats.damage);
+            animator.ResetTrigger("Attack");
+            animator.SetTrigger("Attack");
         }
+
+        targetPlayerStats.TakeDamage(
+            enemyStats.damage);
     }
 
     // =====================================
@@ -261,8 +236,7 @@ public class EnemyAI : MonoBehaviour
 
     public void Engage()
     {
-        engaged = true;
-
+        engaged    = true;
         chaseTimer = 0f;
     }
 
@@ -273,17 +247,16 @@ public class EnemyAI : MonoBehaviour
     void ReturnToSpawn()
     {
         engaged = false;
-
         roaming = false;
-
         chaseTimer = 0f;
 
         agent.isStopped = false;
-
-        agent.SetDestination(
-            spawnPosition);
+        agent.SetDestination(spawnPosition);
 
         SetMoving(true);
+
+        // Re-target when back at spawn
+        FindNearestPlayer();
     }
 
     // =====================================
@@ -294,9 +267,7 @@ public class EnemyAI : MonoBehaviour
     {
         if (animator != null)
         {
-            animator.SetBool(
-                "Moving",
-                moving);
+            animator.SetBool("Moving", moving);
         }
     }
 
@@ -306,27 +277,7 @@ public class EnemyAI : MonoBehaviour
 
     public void Die()
     {
-        GameObject player =
-            GameObject.FindGameObjectWithTag(
-                "Player");
-
-        if (player != null)
-        {
-            QuestManager manager =
-                player.GetComponent
-                <QuestManager>();
-
-            if (manager != null)
-            {
-                manager.RegisterKill(
-                    enemyID);
-            }
-        }
-
-        Debug.Log(
-            enemyID +
-            " died.");
-
+        Debug.Log(enemyID + " died.");
         Destroy(gameObject);
     }
 }

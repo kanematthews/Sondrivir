@@ -40,8 +40,7 @@ public class NPCDialogueUI : MonoBehaviour
     // CURRENT NODE
     // =====================================================
 
-    private UnifiedNPCGraphEditor
-        .GraphNodeData currentNode;
+    private GraphNodeData currentNode;
 
     // =====================================================
     // AWAKE
@@ -140,9 +139,7 @@ public class NPCDialogueUI : MonoBehaviour
     // LOAD NODE
     // =====================================================
 
-    public void LoadNode(
-        UnifiedNPCGraphEditor
-            .GraphNodeData node)
+    public void LoadNode(GraphNodeData node)
     {
         currentNode = node;
 
@@ -167,19 +164,14 @@ public class NPCDialogueUI : MonoBehaviour
             return;
         }
 
-        List<
-            UnifiedNPCGraphEditor
-            .GraphEdgeData> connections =
-                currentGraph.edges
-                .FindAll(
-                    x =>
-                    x.outputGUID ==
-                    currentNode.guid);
+        List<GraphEdgeData> connections =
+            currentGraph.edges
+            .FindAll(
+                x =>
+                x.outputGUID ==
+                currentNode.guid);
 
-        foreach (
-            UnifiedNPCGraphEditor
-            .GraphEdgeData edge
-            in connections)
+        foreach (GraphEdgeData edge in connections)
         {
             GameObject buttonObj =
                 Instantiate(
@@ -346,12 +338,9 @@ public class NPCDialogueUI : MonoBehaviour
     // SELECT CHOICE
     // =====================================================
 
-    public void SelectChoice(
-        UnifiedNPCGraphEditor
-            .GraphEdgeData edge)
+    public void SelectChoice(GraphEdgeData edge)
     {
-        UnifiedNPCGraphEditor
-            .GraphNodeData nextNode =
+        GraphNodeData nextNode =
                 currentGraph.nodes
                 .Find(
                     x =>
@@ -370,9 +359,7 @@ public class NPCDialogueUI : MonoBehaviour
     // EXECUTE NODE
     // =====================================================
 
-    private void ExecuteNode(
-UnifiedNPCGraphEditor
-.GraphNodeData node)
+    private void ExecuteNode(GraphNodeData node)
 {
 currentNode = node;
 
@@ -386,8 +373,7 @@ switch (node.nodeType)
     // DIALOGUE
     // =================================
 
-    case UnifiedNPCGraphEditor
-        .NodeType.Dialogue:
+    case NodeType.Dialogue:
 
         LoadNode(node);
         break;
@@ -396,8 +382,7 @@ switch (node.nodeType)
     // QUEST OFFER
     // =================================
 
-    case UnifiedNPCGraphEditor
-        .NodeType.QuestOffer:
+    case NodeType.QuestOffer:
 
         if (
             node.questData != null &&
@@ -440,8 +425,7 @@ switch (node.nodeType)
     // QUEST CHECK
     // =================================
 
-    case UnifiedNPCGraphEditor
-        .NodeType.QuestCheck:
+    case NodeType.QuestCheck:
 
         bool readyToTurnIn =
             false;
@@ -513,8 +497,7 @@ switch (node.nodeType)
     // QUEST TURN IN
     // =================================
 
-    case UnifiedNPCGraphEditor
-        .NodeType.QuestTurnIn:
+    case NodeType.QuestTurnIn:
 
         if (
             node.questData != null &&
@@ -616,8 +599,7 @@ switch (node.nodeType)
     // TRADE
     // =================================
 
-    case UnifiedNPCGraphEditor
-        .NodeType.Trade:
+    case NodeType.Trade:
 
         LoadNode(node);
         break;
@@ -626,8 +608,7 @@ switch (node.nodeType)
     // CONDITION
     // =================================
 
-    case UnifiedNPCGraphEditor
-        .NodeType.Condition:
+    case NodeType.Condition:
 
         LoadNode(node);
         break;
@@ -636,8 +617,7 @@ switch (node.nodeType)
     // END
     // =================================
 
-    case UnifiedNPCGraphEditor
-        .NodeType.End:
+    case NodeType.End:
 
         CloseDialogue();
         break;

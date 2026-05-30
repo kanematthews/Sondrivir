@@ -7,19 +7,28 @@ public class MainMenuManager : MonoBehaviour
     public string gameWorldSceneName =
         "GameWorld";
 
+    [Header("UI")]
+    public GameObject lobbyPanel;
+
+    // =====================================
+    // ENTER WORLD
+    // Shows the host/join lobby panel
+    // =====================================
+
     public void EnterWorld()
     {
-        SceneManager.LoadScene(
-            gameWorldSceneName
-        );
+        if (NetworkRelay.instance != null)
+        {
+            NetworkRelay.instance.EnterWorld();
+        }
     }
+
+    // =====================================
+    // QUIT
+    // =====================================
 
     public void QuitGame()
     {
-        Debug.Log(
-            "Quit Game"
-        );
-
         Application.Quit();
     }
 }

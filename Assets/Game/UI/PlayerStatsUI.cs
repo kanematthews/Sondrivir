@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerStatsUI : MonoBehaviour
 {
@@ -27,13 +28,13 @@ public class PlayerStatsUI : MonoBehaviour
         "Mana",
 
         "Damage",
+        "Magic Damage",
         "Attack Speed",
         "Attack Range",
 
         "Strength",
         "Dexterity",
-        "Intellect",
-        "Vitality",
+        "Intelligence",
 
         "Defense",
 
@@ -56,6 +57,12 @@ public class PlayerStatsUI : MonoBehaviour
     void Start()
     {
         GenerateRows();
+
+        // Force the ContentSizeFitter to recalculate
+        // now that all rows have been added
+        UnityEngine.UI.LayoutRebuilder
+            .ForceRebuildLayoutImmediate(
+                GetComponent<RectTransform>());
     }
 
     // =========================================
@@ -112,6 +119,10 @@ public class PlayerStatsUI : MonoBehaviour
             playerStats.CalculateDamage().ToString());
 
         Set(
+            "Magic Damage",
+            playerStats.magicDamage.ToString());
+
+        Set(
             "Attack Speed",
             playerStats.attackSpeed
             .ToString("F2"));
@@ -134,12 +145,8 @@ public class PlayerStatsUI : MonoBehaviour
             playerStats.dexterity.ToString());
 
         Set(
-            "Intellect",
-            playerStats.intellect.ToString());
-
-        Set(
-            "Vitality",
-            playerStats.vitality.ToString());
+            "Intelligence",
+            playerStats.intelligence.ToString());
 
         // =====================================
         // DEFENSE

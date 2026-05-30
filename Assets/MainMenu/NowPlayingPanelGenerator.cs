@@ -526,11 +526,13 @@ public class NowPlayingPanelGenerator : MonoBehaviour
         if (audioSource == null)
             return;
 
+#if !UNITY_SERVER
         audioSource.GetSpectrumData(
             spectrum,
             0,
             FFTWindow.Blackman
         );
+#endif
 
         for (
             int i = 0;

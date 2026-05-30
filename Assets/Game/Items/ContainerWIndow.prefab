@@ -118,7 +118,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.16862746, g: 0.10980392, b: 0.06666667, a: 1}
+  m_Color: {r: 0.05882353, g: 0.05882353, b: 0.101960786, a: 0.9607843}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -148,6 +148,7 @@ GameObject:
   - component: {fileID: 5757776799450675459}
   - component: {fileID: 5742937521123750747}
   - component: {fileID: 5821262034992418676}
+  - component: {fileID: 98397340118047840}
   m_Layer: 5
   m_Name: ContainerWIndow
   m_TagString: Untagged
@@ -229,10 +230,6 @@ MonoBehaviour:
   container: {fileID: 0}
   slotParent: {fileID: 4815053540381576919}
   slotPrefab: {fileID: 8979132504838540428, guid: ebd593b035af58040ab15ad0bb29ae47, type: 3}
-  columns: 4
-  cellSize: 40
-  spacing: 4
-  padding: 16
 --- !u!114 &5821262034992418676
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -253,3 +250,28 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &98397340118047840
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3478478547270483179}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
+  GlobalObjectIdHash: 0
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 1
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0

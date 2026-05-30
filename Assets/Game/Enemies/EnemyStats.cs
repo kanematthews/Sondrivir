@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -9,8 +10,22 @@ public enum EnemyBehaviour
     Hostile
 }
 
-public class EnemyStats : MonoBehaviour
+public class EnemyStats : NetworkBehaviour
 {
+    // =====================================
+    // NETWORK VARIABLES
+    // =====================================
+
+    public NetworkVariable<int> netHealth =
+        new NetworkVariable<int>(
+            0,
+            NetworkVariableReadPermission.Everyone,
+            NetworkVariableWritePermission.Server);
+
+    // =====================================
+    // INSPECTOR
+    // =====================================
+
     [Header("Enemy Info")]
     public string enemyName = "Skeleton";
 
@@ -29,7 +44,6 @@ public class EnemyStats : MonoBehaviour
 
     public float attackRange = 2f;
 
-    // 1 = once per second
     public float attackSpeed = 1f;
 
     [Header("Rewards")]
@@ -52,48 +66,80 @@ public class EnemyStats : MonoBehaviour
     [Header("Respawn")]
     public float respawnTime = 5f;
 
-    void Start()
+    // =====================================
+    // ON NETWORK SPAWN
+    // =====================================
+
+    public override void OnNetworkSpawn()
     {
-        currentHealth = maxHealth;
+        netHealth.OnValueChanged +=
+            OnHealthChanged;
+
+        if (IsServer)
+        {
+            currentHealth    = maxHealth;
+            netHealth.Value  = maxHealth;
+        }
+        else
+        {
+            currentHealth = netHealth.Value;
+        }
 
         UpdateHealthBar();
     }
 
-    // =========================================
-    // DAMAGE
-    // =========================================
+    public override void OnNetworkDespawn()
+    {
+        netHealth.OnValueChanged -=
+            OnHealthChanged;
+    }
+
+    void OnHealthChanged(int prev, int next)
+    {
+        currentHealth = next;
+        UpdateHealthBar();
+    }
+
+    // =====================================
+    // START
+    // =====================================
+
+    void Start()
+    {
+        if (!IsServer) return;
+
+        currentHealth   = maxHealth;
+        netHealth.Value = maxHealth;
+
+        UpdateHealthBar();
+    }
+
+    // =====================================
+    // TAKE DAMAGE (server only)
+    // =====================================
 
     public void TakeDamage(int amount)
     {
-        currentHealth -= amount;
+        if (!IsServer) return;
 
-        currentHealth =
+        int newHealth =
             Mathf.Clamp(
-                currentHealth,
+                netHealth.Value - amount,
                 0,
                 maxHealth);
 
-        Debug.Log(
-            enemyName +
-            " took " +
-            amount +
-            " damage.");
+        netHealth.Value = newHealth;
+
+        currentHealth = newHealth;
 
         UpdateHealthBar();
 
-        SpawnDamageText(amount);
+        SpawnDamageTextClientRpc(amount);
 
-        // PASSIVE ENEMIES BECOME AGGRESSIVE
+        // Passive enemies become aggressive
+        EnemyAI ai = GetComponent<EnemyAI>();
 
-        EnemyAI ai =
-            GetComponent<EnemyAI>();
-
-        if (ai != null)
-        {
-            ai.Engage();
-        }
-
-        // DEAD
+        if (ai != null) ai.Engage();
 
         if (currentHealth <= 0)
         {
@@ -101,25 +147,25 @@ public class EnemyStats : MonoBehaviour
         }
     }
 
-    // =========================================
+    // =====================================
     // HEALTH BAR
-    // =========================================
+    // =====================================
 
     void UpdateHealthBar()
     {
         if (healthFill != null)
         {
             healthFill.fillAmount =
-                (float)currentHealth /
-                maxHealth;
+                (float)currentHealth / maxHealth;
         }
     }
 
-    // =========================================
-    // DAMAGE TEXT
-    // =========================================
+    // =====================================
+    // DAMAGE TEXT (all clients)
+    // =====================================
 
-    void SpawnDamageText(int amount)
+    [ClientRpc]
+    void SpawnDamageTextClientRpc(int amount)
     {
         if (
             damageTextPrefab == null ||
@@ -128,27 +174,18 @@ public class EnemyStats : MonoBehaviour
             return;
         }
 
-        // RANDOM OFFSET
-
-        Vector3 randomOffset =
+        Vector3 offset =
             new Vector3(
                 Random.Range(-0.4f, 0.4f),
                 Random.Range(0f, 0.3f),
                 0f);
 
-        // SPAWN POSITION
-
-        Vector3 spawnPosition =
-            damageTextSpawnPoint.position +
-            randomOffset;
-
         GameObject textObj =
             Instantiate(
                 damageTextPrefab,
-                spawnPosition,
+                damageTextSpawnPoint.position +
+                    offset,
                 Quaternion.identity);
-
-        // MAKE TEXT RED
 
         TMPro.TextMeshPro text =
             textObj.GetComponent
@@ -168,29 +205,30 @@ public class EnemyStats : MonoBehaviour
         }
     }
 
-    // =========================================
-    // LOOT
-    // =========================================
+    // =====================================
+    // LOOT (server only)
+    // =====================================
 
     void SpawnLootBag()
     {
-        if (lootBagPrefab == null)
-        {
-            return;
-        }
+        if (!IsServer) return;
 
-        // SPAWN BAG
+        if (lootBagPrefab == null) return;
 
         GameObject bagObj =
             Instantiate(
                 lootBagPrefab,
                 transform.position,
-                Quaternion.Euler(
-                    90f,
-                    0f,
-                    0f));
+                Quaternion.Euler(90f, 0f, 0f));
 
-        // GET LOOT BAG
+        NetworkObject netObj =
+            bagObj.GetComponent<NetworkObject>();
+
+        if (netObj == null)
+        {
+            Destroy(bagObj);
+            return;
+        }
 
         LootBag lootBag =
             bagObj.GetComponent<LootBag>();
@@ -198,211 +236,109 @@ public class EnemyStats : MonoBehaviour
         if (lootBag == null)
         {
             Destroy(bagObj);
-
             return;
         }
 
         bool hasLoot = false;
 
-        // ROLL LOOT TABLE
-
         foreach (LootDrop drop in lootTable)
         {
-            double roll =
-                Random.Range(0f, 100f);
+            float roll = Random.Range(0f, 100f);
 
-            if (roll <= drop.dropChance)
-            {
-                int amount =
-                    Random.Range(
-                        drop.minAmount,
-                        drop.maxAmount + 1);
+            if (roll > drop.dropChance) continue;
 
-                // =============================
-                // CREATE ITEM STACK
-                // =============================
+            int amount =
+                Random.Range(
+                    drop.minAmount,
+                    drop.maxAmount + 1);
 
-                ItemStack stack =
-                    new ItemStack();
+            ItemStack stack = new ItemStack();
+            stack.item   = drop.item;
+            stack.amount = amount;
 
-                stack.item =
-                    drop.item;
-
-                stack.amount =
-                    amount;
-
-                // =============================
-                // ONLY THESE TYPES
-                // CAN ROLL RARITY
-                // =============================
-
-                bool canRollRarity =
-                    drop.item.itemType ==
+            bool canRollRarity =
+                drop.item.itemType ==
                     ItemType.Weapon ||
-
-                    drop.item.itemType ==
-                    ItemType.Armor ||
-
-                    drop.item.itemType ==
+                drop.item.itemType ==
+                    ItemType.Armor  ||
+                drop.item.itemType ==
                     ItemType.Bag;
 
-                // =============================
-                // GENERATE RARITY
-                // =============================
+            stack.rarity =
+                canRollRarity
+                    ? RollItemRarity()
+                    : ItemRarity.Common;
 
-                if (canRollRarity)
-                {
-                    stack.rarity =
-                        RollItemRarity();
-                }
-                else
-                {
-                    stack.rarity =
-                        ItemRarity.Common;
-                }
-
-                // =============================
-                // ADD TO LOOT BAG
-                // =============================
-
-                bool added =
-                    lootBag.AddItem(stack);
-
-                if (added)
-                {
-                    hasLoot = true;
-                }
+            if (lootBag.AddItem(stack))
+            {
+                hasLoot = true;
             }
         }
-
-        // DESTROY EMPTY BAG
 
         if (!hasLoot)
         {
             Destroy(bagObj);
+            return;
         }
+
+        netObj.Spawn();
     }
 
-    // =========================================
+    // =====================================
     // ITEM RARITY
-    // =========================================
+    // =====================================
 
     ItemRarity RollItemRarity()
     {
-        // 95% COMMON
-
-        float rarityRoll =
-            Random.Range(0f, 100f);
-
-        if (rarityRoll > 5f)
-        {
+        // 95% — Common
+        if (Random.Range(0f, 100f) > 5f)
             return ItemRarity.Common;
-        }
 
-        // 5% RARITY TABLE
+        float roll = Random.Range(0f, 100f);
 
-        float tierRoll =
-            Random.Range(0f, 100f);
+        if (roll < 75f) return ItemRarity.Uncommon;
+        if (roll < 95f) return ItemRarity.Rare;
+        if (roll < 99f) return ItemRarity.Epic;
 
-        // 75%
-        if (tierRoll <= 75f)
-        {
-            return ItemRarity.Uncommon;
-        }
-
-        // 20%
-        if (tierRoll <= 95f)
-        {
-            return ItemRarity.Rare;
-        }
-
-        // 4%
-        if (tierRoll <= 99f)
-        {
-            return ItemRarity.Epic;
-        }
-
-        // 1%
         return ItemRarity.Legendary;
     }
 
-    // =========================================
-    // DEATH
-    // =========================================
+    // =====================================
+    // DIE (server only)
+    // =====================================
 
     void Die()
     {
-        Debug.Log(
-            enemyName + " died.");
+        if (!IsServer) return;
 
-        // =====================================
-        // QUEST KILL TRACKING
-        // =====================================
-
-        EnemyAI ai =
-            GetComponent<EnemyAI>();
-
-        if (ai != null)
-        {
-            GameObject playerObj =
-                GameObject.FindGameObjectWithTag(
-                    "Player");
-
-            if (playerObj != null)
-            {
-                QuestManager manager =
-                    playerObj.GetComponent
-                    <QuestManager>();
-
-                if (manager != null)
-                {
-                    manager.RegisterKill(
-                        ai.enemyID);
-
-                    Debug.Log(
-                        "REGISTERED KILL: " +
-                        ai.enemyID);
-                }
-            }
-        }
-
-        // =====================================
-        // SPAWN LOOT BAG
-        // =====================================
+        Debug.Log(enemyName + " died.");
 
         SpawnLootBag();
 
-        // =====================================
-        // GIVE PLAYER EXP
-        // =====================================
-
+        // Give nearest player experience
         PlayerStats player =
             FindFirstObjectByType<PlayerStats>();
 
         if (player != null)
         {
-            player.GainExperience(
-                experienceReward);
+            player.GainExperience(experienceReward);
         }
-
-        // =====================================
-        // DISABLE ENEMY
-        // =====================================
 
         gameObject.SetActive(false);
 
-        Invoke(
-            nameof(Respawn),
-            respawnTime);
+        Invoke(nameof(Respawn), respawnTime);
     }
 
-    // =========================================
+    // =====================================
     // RESPAWN
-    // =========================================
+    // =====================================
 
     void Respawn()
     {
-        currentHealth = maxHealth;
+        if (!IsServer) return;
+
+        currentHealth   = maxHealth;
+        netHealth.Value = maxHealth;
 
         UpdateHealthBar();
 

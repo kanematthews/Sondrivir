@@ -1,6 +1,7 @@
+using Unity.Netcode;
 using UnityEngine;
 
-public class PlayerCombat : MonoBehaviour
+public class PlayerCombat : NetworkBehaviour
 {
     [Header("Combat")]
     public LayerMask enemyLayer;
@@ -38,6 +39,9 @@ public class PlayerCombat : MonoBehaviour
 
     void Update()
     {
+        // Only the owning player processes input
+        if (!IsOwner) return;
+
         HandleTargeting();
 
         HandleAutoAttack();
@@ -49,28 +53,24 @@ public class PlayerCombat : MonoBehaviour
 
     void HandleTargeting()
     {
-        // RIGHT CLICK
-        if (Input.GetMouseButtonDown(1))
+        if (!Input.GetMouseButtonDown(1)) return;
+
+        Ray ray =
+            Camera.main.ScreenPointToRay(
+                Input.mousePosition);
+
+        if (!Physics.Raycast(
+            ray, out RaycastHit hit, 100f))
         {
-            Ray ray =
-                Camera.main.ScreenPointToRay(
-                    Input.mousePosition);
+            return;
+        }
 
-            if (
-                Physics.Raycast(
-                    ray,
-                    out RaycastHit hit,
-                    100f))
-            {
-                Targetable target =
-                    hit.collider.GetComponent<Targetable>();
+        Targetable target =
+            hit.collider.GetComponent<Targetable>();
 
-                // VALID TARGET
-                if (target != null)
-                {
-                    SetTarget(target);
-                }
-            }
+        if (target != null)
+        {
+            SetTarget(target);
         }
     }
 
@@ -80,30 +80,25 @@ public class PlayerCombat : MonoBehaviour
 
     void SetTarget(Targetable target)
     {
-        // CLEAR OLD TARGET
         if (
             currentTarget != null &&
             currentTarget.targetRing != null)
         {
-            currentTarget.targetRing.SetActive(false);
+            currentTarget.targetRing
+                .SetActive(false);
         }
 
         currentTarget = target;
 
-        Targetable.CurrentTarget =
-            target;
+        Targetable.CurrentTarget = target;
 
-        // ENABLE NEW TARGET RING
         if (
             currentTarget != null &&
             currentTarget.targetRing != null)
         {
-            currentTarget.targetRing.SetActive(true);
+            currentTarget.targetRing
+                .SetActive(true);
         }
-
-        Debug.Log(
-            "Targeted: " +
-            currentTarget.name);
     }
 
     // =========================================
@@ -112,84 +107,71 @@ public class PlayerCombat : MonoBehaviour
 
     void HandleAutoAttack()
     {
-        // NO TARGET
-        if (currentTarget == null)
-        {
-            return;
-        }
+        if (currentTarget == null) return;
 
-        // TARGET DESTROYED
-        if (!currentTarget.gameObject.activeInHierarchy)
+        if (!currentTarget
+            .gameObject.activeInHierarchy)
         {
             currentTarget = null;
-
             return;
         }
 
-        // TIMER
         attackTimer += Time.deltaTime;
 
         float interval =
-            1f /
-            Mathf.Max(
+            1f / Mathf.Max(
                 playerStats.attackSpeed,
                 0.01f);
 
-        // WAIT
-        if (attackTimer < interval)
-        {
-            return;
-        }
+        if (attackTimer < interval) return;
 
         attackTimer = 0f;
 
-        Attack(currentTarget);
+        TryAttackServerRpc(
+            currentTarget
+                .GetComponent<NetworkObject>()
+                .NetworkObjectId);
     }
 
     // =========================================
-    // ATTACK
+    // ATTACK SERVER RPC
+    // Server validates and applies damage
     // =========================================
 
-    void Attack(Targetable target)
+    [ServerRpc]
+    void TryAttackServerRpc(
+        ulong targetNetworkId)
     {
-        if (target == null)
+        if (!NetworkManager.Singleton
+            .SpawnManager.SpawnedObjects
+            .TryGetValue(
+                targetNetworkId,
+                out NetworkObject targetObj))
         {
             return;
         }
+
+        Targetable target =
+            targetObj
+                .GetComponent<Targetable>();
+
+        if (target == null) return;
 
         float distance =
             Vector3.Distance(
                 transform.position,
                 target.transform.position);
 
-        // OUT OF RANGE
         if (distance > playerStats.attackRange)
         {
-            Debug.Log("Target out of range.");
-
             return;
         }
 
-        // FACE TARGET
-        Vector3 lookPosition =
-            target.transform.position;
-
-        lookPosition.y =
-            transform.position.y;
-
-        transform.LookAt(lookPosition);
-
-        // PLAY ATTACK ANIMATION
-        if (animator != null)
-        {
-            animator.SetTrigger("Attack");
-        }
-
         // DAMAGE
+
         int damage =
             playerStats.CalculateDamage();
 
-        // CRIT
         bool crit =
             Random.value <=
             playerStats.critChance;
@@ -202,22 +184,29 @@ public class PlayerCombat : MonoBehaviour
                     playerStats.critDamage);
         }
 
-        // ENEMY
         EnemyStats enemy =
-            target.GetComponent<EnemyStats>();
+            targetObj
+                .GetComponent<EnemyStats>();
 
         if (enemy != null)
         {
             enemy.TakeDamage(damage);
+        }
 
-            Debug.Log(
-                "Hit " +
-                enemy.name +
-                " for " +
-                damage +
-                (crit
-                ? " CRITICAL!"
-                : ""));
+        // Notify owning client of hit
+        PlayAttackAnimationClientRpc();
+    }
+
+    // =========================================
+    // PLAY ATTACK ANIMATION (all clients)
+    // =========================================
+
+    [ClientRpc]
+    void PlayAttackAnimationClientRpc()
+    {
+        if (animator != null)
+        {
+            animator.SetTrigger("Attack");
         }
     }
 
@@ -227,10 +216,7 @@ public class PlayerCombat : MonoBehaviour
 
     void OnDrawGizmosSelected()
     {
-        if (attackPoint == null)
-        {
-            return;
-        }
+        if (attackPoint == null) return;
 
         Gizmos.color = Color.red;
 
@@ -241,12 +227,10 @@ public class PlayerCombat : MonoBehaviour
 
         if (stats != null)
         {
-            range =
-                stats.attackRange;
+            range = stats.attackRange;
         }
 
         Gizmos.DrawWireSphere(
-            attackPoint.position,
-            range);
+            attackPoint.position, range);
     }
 }

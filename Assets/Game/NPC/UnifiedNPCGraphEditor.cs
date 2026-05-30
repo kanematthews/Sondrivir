@@ -1,13 +1,65 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+#if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
-
-using UnityEngine;
 using UnityEngine.UIElements;
-
-using System;
-using System.Collections.Generic;
 using System.Linq;
+#endif
+
+// =========================================================
+// RUNTIME DATA CLASSES
+// =========================================================
+
+public enum NodeType
+{
+    Dialogue,
+    QuestOffer,
+    QuestCheck,
+    QuestTurnIn,
+    Trade,
+    Condition,
+    End
+}
+
+[Serializable]
+public class GraphNodeData
+{
+    public string guid;
+    public NodeType nodeType;
+    public string title;
+
+    [TextArea(4, 10)]
+    public string npcText;
+
+    public Vector2 position;
+    public QuestData questData;
+    public string enemyID;
+    public int killCount;
+    public int xpReward;
+    public int goldReward;
+    public bool opensTrade;
+    public string merchantID;
+    public string requiredQuestID;
+    public bool requiresQuestComplete;
+    public bool closeDialogue;
+}
+
+[Serializable]
+public class GraphEdgeData
+{
+    public string outputGUID;
+    public string inputGUID;
+    public string choiceText;
+}
+
+// =========================================================
+// EDITOR WINDOW (editor only)
+// =========================================================
+
+#if UNITY_EDITOR
 
 /*
 =========================================================
@@ -950,86 +1002,8 @@ public void AutoLayout()
         }
     }
 
-    // =====================================================
-    // ENUMS
-    // =====================================================
-
-    public enum NodeType
-    {
-        Dialogue,
-        QuestOffer,
-        QuestCheck,
-        QuestTurnIn,
-        Trade,
-        Condition,
-        End
-    }
-
-    // =====================================================
-    // NODE DATA
-    // =====================================================
-
-    [Serializable]
-    public class GraphNodeData
-    {
-        public string guid;
-
-        public NodeType nodeType;
-
-        public string title;
-
-        [TextArea(4, 10)]
-        public string npcText;
-
-        public Vector2 position;
-
-        // QUEST DATA ASSET
-
-        public QuestData questData;
-
-        // QUEST (legacy / quick-ref fields)
-
-        public string enemyID;
-
-        public int killCount;
-
-        // REWARDS
-
-        public int xpReward;
-
-        public int goldReward;
-
-        // TRADE
-
-        public bool opensTrade;
-
-        public string merchantID;
-
-        // CONDITIONS
-
-        public string requiredQuestID;
-
-        public bool requiresQuestComplete;
-
-        // FLOW
-
-        public bool closeDialogue;
-    }
-
-    // =====================================================
-    // EDGE DATA
-    // =====================================================
-
-    [Serializable]
-    public class GraphEdgeData
-    {
-        public string outputGUID;
-
-        public string inputGUID;
-
-        public string choiceText;
-    }
 }
+#endif
 
 // =========================================================
 // GRAPH ASSET
@@ -1038,24 +1012,13 @@ public void AutoLayout()
 [CreateAssetMenu(
     fileName = "NPCDialogueGraph",
     menuName = "MMO/NPC Graph")]
-public class NPCDialogueGraphData
-    : ScriptableObject
+public class NPCDialogueGraphData : ScriptableObject
 {
     public string npcName;
 
-    public List<
-        UnifiedNPCGraphEditor
-        .GraphNodeData>
-            nodes =
-                new List<
-                    UnifiedNPCGraphEditor
-                    .GraphNodeData>();
+    public List<GraphNodeData> nodes =
+        new List<GraphNodeData>();
 
-    public List<
-        UnifiedNPCGraphEditor
-        .GraphEdgeData>
-            edges =
-                new List<
-                    UnifiedNPCGraphEditor
-                    .GraphEdgeData>();
+    public List<GraphEdgeData> edges =
+        new List<GraphEdgeData>();
 }

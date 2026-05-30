@@ -14,13 +14,6 @@ public class StatRowUI : MonoBehaviour
 
     private PlayerStats playerStats;
 
-    [Header("Spacing")]
-    public float startX = 18f;
-
-    public float characterSpacing = 4.5f;
-
-    public float minimumValueX = 70f;
-
     // =========================================
     // AWAKE
     // =========================================
@@ -89,8 +82,6 @@ public class StatRowUI : MonoBehaviour
 
         valueText.text =
             value;
-
-        AdjustSpacing();
     }
 
     // =========================================
@@ -121,10 +112,14 @@ public class StatRowUI : MonoBehaviour
         }
 
         bool canUpgrade =
-            statName == "Strength" ||
-            statName == "Dexterity" ||
-            statName == "Intellect" ||
-            statName == "Vitality";
+            statName == "Strength"     ||
+            statName == "Dexterity"    ||
+            statName == "Intelligence" ||
+            statName == "Health"       ||
+            statName == "Mana"         ||
+            statName == "Capacity"     ||
+            statName == "HP Regen"     ||
+            statName == "MP Regen";
 
         addButton.gameObject.SetActive(
             canUpgrade &&
@@ -142,81 +137,11 @@ public class StatRowUI : MonoBehaviour
 
     void IncreaseStat()
     {
-        if (playerStats.statPoints <= 0)
-        {
-            return;
-        }
+        if (playerStats.statPoints <= 0) return;
 
-        switch (statName)
-        {
-            case "Strength":
-
-                playerStats.baseStrength++;
-
-                break;
-
-            case "Dexterity":
-
-                playerStats.baseDexterity++;
-
-                break;
-
-            case "Intellect":
-
-                playerStats.baseIntellect++;
-
-                break;
-
-            case "Vitality":
-
-                playerStats.baseVitality++;
-
-                break;
-        }
-
-        playerStats.statPoints--;
-
-        playerStats.RecalculateStats();
+        playerStats.SpendStatPointServerRpc(statName);
 
         RefreshButton();
     }
 
-    // =========================================
-    // ADJUST SPACING
-    // =========================================
-
-    void AdjustSpacing()
-    {
-        if (
-            labelText == null ||
-            valueText == null)
-        {
-            return;
-        }
-
-        labelText.ForceMeshUpdate();
-
-        int characterCount =
-            labelText.text.Length;
-
-        float targetX =
-            startX +
-            (characterCount * characterSpacing);
-
-        targetX =
-            Mathf.Max(
-                targetX,
-                minimumValueX);
-
-        RectTransform valueRect =
-            valueText.rectTransform;
-
-        Vector2 pos =
-            valueRect.anchoredPosition;
-
-        pos.x = targetX;
-
-        valueRect.anchoredPosition =
-            pos;
-    }
 }

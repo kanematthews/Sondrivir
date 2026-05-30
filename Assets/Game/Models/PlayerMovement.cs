@@ -1,7 +1,8 @@
+using Unity.Netcode;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
-public class PlayerMovement : MonoBehaviour
+public class PlayerMovement : NetworkBehaviour
 {
     [Header("Movement")]
     public float moveSpeed = 5f;
@@ -20,21 +21,56 @@ public class PlayerMovement : MonoBehaviour
 
     private Vector3 velocity;
 
-    private void Awake()
+    // =====================================
+    // AWAKE
+    // =====================================
+
+    void Awake()
     {
         controller =
             GetComponent<CharacterController>();
-
-        mainCamera =
-            Camera.main;
     }
 
-    private void Update()
+    // =====================================
+    // ON NETWORK SPAWN
+    // =====================================
+
+    public override void OnNetworkSpawn()
+    {
+        if (!IsOwner)
+        {
+            // Disable input on non-owned players
+            enabled = false;
+            return;
+        }
+
+        // Assign camera to local player
+        mainCamera = Camera.main;
+
+        MMOCameraController cam =
+            mainCamera
+                ?.GetComponent<MMOCameraController>();
+
+        if (cam != null)
+        {
+            cam.target = transform;
+        }
+    }
+
+    // =====================================
+    // UPDATE
+    // =====================================
+
+    void Update()
     {
         MovePlayer();
     }
 
-    private void MovePlayer()
+    // =====================================
+    // MOVE
+    // =====================================
+
+    void MovePlayer()
     {
         float horizontal =
             Input.GetAxisRaw("Horizontal");
@@ -42,29 +78,17 @@ public class PlayerMovement : MonoBehaviour
         float vertical =
             Input.GetAxisRaw("Vertical");
 
-        // RAW INPUT MAGNITUDE
         float movementAmount =
-            Mathf.Abs(horizontal) +
-            Mathf.Abs(vertical);
+            Mathf.Clamp01(
+                Mathf.Abs(horizontal) +
+                Mathf.Abs(vertical));
 
-        movementAmount =
-            Mathf.Clamp01(movementAmount);
-
-        // UPDATE ANIMATOR
         if (animator != null)
         {
             animator.SetFloat(
                 "Speed",
-                movementAmount
-            );
+                movementAmount);
         }
-
-        Vector3 inputDirection =
-            new Vector3(
-                horizontal,
-                0f,
-                vertical
-            ).normalized;
 
         if (movementAmount > 0.1f)
         {
@@ -75,38 +99,42 @@ public class PlayerMovement : MonoBehaviour
                 mainCamera.transform.right;
 
             cameraForward.y = 0f;
-            cameraRight.y = 0f;
+            cameraRight.y  = 0f;
 
             cameraForward.Normalize();
             cameraRight.Normalize();
 
             Vector3 moveDirection =
                 (cameraForward * vertical) +
-                (cameraRight * horizontal);
+                (cameraRight  * horizontal);
 
             moveDirection.Normalize();
 
+            // Use stat speed if available
+            PlayerStats stats =
+                GetComponent<PlayerStats>();
+
+            float speed =
+                stats != null
+                    ? stats.moveSpeed
+                    : moveSpeed;
+
             controller.Move(
                 moveDirection *
-                moveSpeed *
-                Time.deltaTime
-            );
-
-            Quaternion targetRotation =
-                Quaternion.LookRotation(
-                    moveDirection
-                );
+                speed *
+                Time.deltaTime);
 
             transform.rotation =
                 Quaternion.Slerp(
                     transform.rotation,
-                    targetRotation,
+                    Quaternion.LookRotation(
+                        moveDirection),
                     rotationSpeed *
-                    Time.deltaTime
-                );
+                    Time.deltaTime);
         }
 
-        if (controller.isGrounded &&
+        if (
+            controller.isGrounded &&
             velocity.y < 0f)
         {
             velocity.y = -2f;
@@ -116,7 +144,6 @@ public class PlayerMovement : MonoBehaviour
             gravity * Time.deltaTime;
 
         controller.Move(
-            velocity * Time.deltaTime
-        );
+            velocity * Time.deltaTime);
     }
 }

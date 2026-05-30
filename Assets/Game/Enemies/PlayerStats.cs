@@ -1,8 +1,48 @@
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class PlayerStats : MonoBehaviour
+public class PlayerStats : NetworkBehaviour
 {
+    // =====================================
+    // NETWORK VARIABLES
+    // Synced to all clients
+    // =====================================
+
+    public NetworkVariable<int> netHealth =
+        new NetworkVariable<int>(
+            100,
+            NetworkVariableReadPermission.Everyone,
+            NetworkVariableWritePermission.Server);
+
+    public NetworkVariable<int> netMaxHealth =
+        new NetworkVariable<int>(
+            100,
+            NetworkVariableReadPermission.Everyone,
+            NetworkVariableWritePermission.Server);
+
+    public NetworkVariable<int> netMana =
+        new NetworkVariable<int>(
+            100,
+            NetworkVariableReadPermission.Everyone,
+            NetworkVariableWritePermission.Server);
+
+    public NetworkVariable<int> netMaxMana =
+        new NetworkVariable<int>(
+            100,
+            NetworkVariableReadPermission.Everyone,
+            NetworkVariableWritePermission.Server);
+
+    public NetworkVariable<int> netLevel =
+        new NetworkVariable<int>(
+            1,
+            NetworkVariableReadPermission.Everyone,
+            NetworkVariableWritePermission.Server);
+
+    // =====================================
+    // PROGRESSION (local)
+    // =====================================
+
     [Header("Progression")]
     public int level = 1;
 
@@ -21,12 +61,20 @@ public class PlayerStats : MonoBehaviour
 
     public int baseDexterity = 1;
 
-    public int baseIntellect = 1;
+    public int baseIntelligence = 1;
 
-    public int baseVitality = 1;
+    public int baseHealth = 0;
+
+    public int baseMana = 0;
+
+    public int baseCapacity = 0;
+
+    public int baseHPRegen = 0;
+
+    public int baseMPRegen = 0;
 
     // =====================================
-    // FINAL STATS
+    // FINAL STATS (calculated)
     // =====================================
 
     [Header("Final Stats")]
@@ -34,9 +82,9 @@ public class PlayerStats : MonoBehaviour
 
     public int dexterity;
 
-    public int intellect;
+    public int intelligence;
 
-    public int vitality;
+    public int magicDamage;
 
     // =====================================
     // COMBAT
@@ -82,7 +130,7 @@ public class PlayerStats : MonoBehaviour
     private float mpTimer;
 
     // =====================================
-    // RESOURCES
+    // RESOURCES (local mirror of net vars)
     // =====================================
 
     [Header("Resources")]
@@ -123,22 +171,93 @@ public class PlayerStats : MonoBehaviour
     private EquipmentContainer equipment;
 
     // =====================================
+    // ON NETWORK SPAWN
+    // =====================================
+
+    public override void OnNetworkSpawn()
+    {
+        netHealth.OnValueChanged    += OnHealthChanged;
+        netMaxHealth.OnValueChanged += OnMaxHealthChanged;
+        netMana.OnValueChanged      += OnManaChanged;
+        netMaxMana.OnValueChanged   += OnMaxManaChanged;
+        netLevel.OnValueChanged     += OnLevelChanged;
+
+        if (IsServer)
+        {
+            equipment = GetComponent<EquipmentContainer>();
+
+            RecalculateStats();
+
+            netHealth.Value    = maxHealth;
+            netMaxHealth.Value = maxHealth;
+            netMana.Value      = maxMana;
+            netMaxMana.Value   = maxMana;
+            netLevel.Value     = level;
+        }
+    }
+
+    // =====================================
+    // ON NETWORK DESPAWN
+    // =====================================
+
+    public override void OnNetworkDespawn()
+    {
+        netHealth.OnValueChanged    -= OnHealthChanged;
+        netMaxHealth.OnValueChanged -= OnMaxHealthChanged;
+        netMana.OnValueChanged      -= OnManaChanged;
+        netMaxMana.OnValueChanged   -= OnMaxManaChanged;
+        netLevel.OnValueChanged     -= OnLevelChanged;
+    }
+
+    // =====================================
+    // NET VAR CALLBACKS
+    // =====================================
+
+    void OnHealthChanged(int prev, int next)
+    {
+        currentHealth = next;
+        UpdateHealthUI();
+    }
+
+    void OnMaxHealthChanged(int prev, int next)
+    {
+        maxHealth = next;
+        UpdateHealthUI();
+    }
+
+    void OnManaChanged(int prev, int next)
+    {
+        currentMana = next;
+        UpdateManaUI();
+    }
+
+    void OnMaxManaChanged(int prev, int next)
+    {
+        maxMana = next;
+        UpdateManaUI();
+    }
+
+    void OnLevelChanged(int prev, int next)
+    {
+        level = next;
+    }
+
+    // =====================================
     // START
     // =====================================
 
     void Start()
     {
-        equipment =
-            GetComponent<EquipmentContainer>();
+        if (!IsServer) return;
+
+        equipment = GetComponent<EquipmentContainer>();
 
         RecalculateStats();
 
         currentHealth = maxHealth;
-
-        currentMana = maxMana;
+        currentMana   = maxMana;
 
         UpdateHealthUI();
-
         UpdateManaUI();
     }
 
@@ -148,11 +267,15 @@ public class PlayerStats : MonoBehaviour
 
     void Update()
     {
+        if (!IsServer) return;
+
         HandleRegeneration();
 
-        UpdateHealthUI();
-
-        UpdateManaUI();
+        if (IsOwner)
+        {
+            UpdateHealthUI();
+            UpdateManaUI();
+        }
     }
 
     // =====================================
@@ -166,7 +289,6 @@ public class PlayerStats : MonoBehaviour
         if (hpTimer >= hpRegenInterval)
         {
             hpTimer = 0f;
-
             Heal(hpRegenAmount);
         }
 
@@ -175,7 +297,6 @@ public class PlayerStats : MonoBehaviour
         if (mpTimer >= mpRegenInterval)
         {
             mpTimer = 0f;
-
             RestoreMana(mpRegenAmount);
         }
     }
@@ -186,132 +307,59 @@ public class PlayerStats : MonoBehaviour
 
     public void RecalculateStats()
     {
-        // RESET PRIMARYS
+        strength     = baseStrength;
+        dexterity    = baseDexterity;
+        intelligence = baseIntelligence;
 
-        strength = baseStrength;
-
-        dexterity = baseDexterity;
-
-        intellect = baseIntellect;
-
-        vitality = baseVitality;
-
-        // RESET COMBAT
-
-        baseDamage = 1;
-
-        defense = 0;
-
+        baseDamage  = 1;
+        defense     = 0;
         attackSpeed = 1f;
-
         attackRange = 2f;
-
-        critChance = 0f;
-
-        critDamage = 1.5f;
-
-        // RESET SECONDARYS
+        critChance  = 0f;
+        critDamage  = 1.5f;
 
         moveSpeed = 5f;
+        capacity  = 50f + (baseCapacity * 20f);
 
-        capacity = 50f;
-
-        hpRegenAmount = 1;
-
-        mpRegenAmount = 1;
+        hpRegenAmount = 1 + baseHPRegen;
+        mpRegenAmount = 1 + baseMPRegen;
 
         pvpEnabled = false;
 
-        // RESET RESOURCES
-
-        maxHealth =
-            100 + (vitality * 20);
-
-        maxMana =
-            100 + (intellect * 15);
-
-        // =================================
-        // EQUIPMENT
-        // =================================
+        maxHealth = 100 + (baseHealth * 10);
+        maxMana   = 100 + (intelligence * 15) + (baseMana * 10);
 
         if (equipment != null)
         {
             foreach (ItemStack stack in equipment.slots)
             {
-                if (
-                    stack == null ||
-                    stack.item == null)
-                {
+                if (stack == null || stack.item == null)
                     continue;
-                }
 
-                ItemData item =
-                    stack.item;
+                ItemData item = stack.item;
 
-                // PRIMARYS
+                strength     += item.bonusStrength;
+                dexterity    += item.bonusDexterity;
+                intelligence += item.bonusIntellect;
 
-                strength +=
-                    item.bonusStrength;
+                defense += item.armor;
 
-                dexterity +=
-                    item.bonusDexterity;
-
-                intellect +=
-                    item.bonusIntellect;
-
-                vitality +=
-                    item.bonusVitality;
-
-                // ARMOR
-
-                defense +=
-                    item.armor;
-
-                // MAINHAND DEFINES WEAPON
-
-                if (
-                    item.equipmentSlotType ==
+                if (item.equipmentSlotType ==
                     EquipmentSlotType.MainHand)
                 {
-                    baseDamage =
-                        item.damage;
-
-                    attackSpeed =
-                        item.attackSpeed;
-
-                    attackRange =
-                        item.attackRange;
+                    baseDamage  = item.damage;
+                    attackSpeed = item.attackSpeed;
+                    attackRange = item.attackRange;
                 }
 
-                // BONUS COMBAT
-                // TEMPORARILY DISABLED
-                // UNTIL UNITY FULLY RECOMPILES
+                maxHealth += item.bonusHealth;
+                maxMana   += item.bonusMana;
 
-                // RESOURCES
+                hpRegenAmount += item.bonusHPRegen;
+                mpRegenAmount += item.bonusMPRegen;
 
-                maxHealth +=
-                    item.bonusHealth;
-
-                maxMana +=
-                    item.bonusMana;
-
-                // REGEN
-
-                hpRegenAmount +=
-                    item.bonusHPRegen;
-
-                mpRegenAmount +=
-                    item.bonusMPRegen;
-
-                // MOVEMENT
-
-                moveSpeed +=
-                    item.bonusMoveSpeed;
-
-                capacity +=
-                    item.bonusCapacity;
-
-                // SPECIAL
+                moveSpeed += item.bonusMoveSpeed;
+                capacity  += item.bonusCapacity;
 
                 if (item.enablePvp)
                 {
@@ -320,33 +368,70 @@ public class PlayerStats : MonoBehaviour
             }
         }
 
-        // FINAL DAMAGE
+        // PRIMARY STAT EFFECTS
 
-        baseDamage +=
-            strength * 2;
+        baseDamage =
+            (int)(baseDamage * (1f + strength * 0.02f));
 
-        // CLAMP
+        attackSpeed += dexterity * 0.02f;
+        moveSpeed   += dexterity * 0.05f;
+
+        magicDamage = intelligence * 3;
+
+        // CLAMP CURRENT
 
         currentHealth =
-            Mathf.Clamp(
-                currentHealth,
-                0,
-                maxHealth);
+            Mathf.Clamp(currentHealth, 0, maxHealth);
 
         currentMana =
-            Mathf.Clamp(
-                currentMana,
-                0,
-                maxMana);
+            Mathf.Clamp(currentMana, 0, maxMana);
+
+        // SYNC TO NET VARS (server only)
+
+        if (IsServer)
+        {
+            netMaxHealth.Value = maxHealth;
+            netMaxMana.Value   = maxMana;
+            netLevel.Value     = level;
+
+            netHealth.Value =
+                Mathf.Clamp(
+                    netHealth.Value, 0, maxHealth);
+
+            netMana.Value =
+                Mathf.Clamp(
+                    netMana.Value, 0, maxMana);
+        }
 
         UpdateHealthUI();
-
         UpdateManaUI();
+    }
 
-        Debug.Log(
-            "Stats Recalculated | " +
-            "DMG: " + baseDamage +
-            " SPD: " + attackSpeed);
+    // =====================================
+    // SPEND STAT POINT (server RPC)
+    // =====================================
+
+    [ServerRpc]
+    public void SpendStatPointServerRpc(
+        string statName)
+    {
+        if (statPoints <= 0) return;
+
+        switch (statName)
+        {
+            case "Strength":     baseStrength++;     break;
+            case "Dexterity":    baseDexterity++;    break;
+            case "Intelligence": baseIntelligence++; break;
+            case "Health":       baseHealth++;       break;
+            case "Mana":         baseMana++;         break;
+            case "Capacity":     baseCapacity++;     break;
+            case "HP Regen":     baseHPRegen++;      break;
+            case "MP Regen":     baseMPRegen++;      break;
+        }
+
+        statPoints--;
+
+        RecalculateStats();
     }
 
     // =====================================
@@ -364,24 +449,25 @@ public class PlayerStats : MonoBehaviour
 
     public void TakeDamage(int amount)
     {
+        if (!IsServer) return;
+
         amount -= defense;
 
-        if (amount < 1)
-        {
-            amount = 1;
-        }
+        if (amount < 1) amount = 1;
 
-        currentHealth -= amount;
-
-        currentHealth =
+        int newHealth =
             Mathf.Clamp(
-                currentHealth,
+                netHealth.Value - amount,
                 0,
-                maxHealth);
+                netMaxHealth.Value);
+
+        netHealth.Value = newHealth;
+
+        currentHealth = newHealth;
 
         UpdateHealthUI();
 
-        if (currentHealth <= 0)
+        if (netHealth.Value <= 0)
         {
             Die();
         }
@@ -393,13 +479,15 @@ public class PlayerStats : MonoBehaviour
 
     public void Heal(int amount)
     {
-        currentHealth += amount;
+        if (!IsServer) return;
 
-        currentHealth =
+        netHealth.Value =
             Mathf.Clamp(
-                currentHealth,
+                netHealth.Value + amount,
                 0,
-                maxHealth);
+                netMaxHealth.Value);
+
+        currentHealth = netHealth.Value;
 
         UpdateHealthUI();
     }
@@ -410,13 +498,15 @@ public class PlayerStats : MonoBehaviour
 
     public void RestoreMana(int amount)
     {
-        currentMana += amount;
+        if (!IsServer) return;
 
-        currentMana =
+        netMana.Value =
             Mathf.Clamp(
-                currentMana,
+                netMana.Value + amount,
                 0,
-                maxMana);
+                netMaxMana.Value);
+
+        currentMana = netMana.Value;
 
         UpdateManaUI();
     }
@@ -440,15 +530,13 @@ public class PlayerStats : MonoBehaviour
 
     public void GainExperience(int amount)
     {
+        if (!IsServer) return;
+
         experience += amount;
 
-        while (
-            experience >=
-            experienceToNextLevel)
+        while (experience >= experienceToNextLevel)
         {
-            experience -=
-                experienceToNextLevel;
-
+            experience -= experienceToNextLevel;
             LevelUp();
         }
     }
@@ -460,28 +548,21 @@ public class PlayerStats : MonoBehaviour
     void LevelUp()
     {
         level++;
-
         statPoints += 3;
-
         experienceToNextLevel *= 2;
+
+        netLevel.Value = level;
 
         RecalculateStats();
 
         // Notify HUD
         LevelUpNotifier notifier =
-            GetComponentInParent<LevelUpNotifier>();
-
-        if (notifier == null)
-        {
-            notifier =
-                FindFirstObjectByType<LevelUpNotifier>();
-        }
+            FindFirstObjectByType<LevelUpNotifier>();
 
         if (notifier != null)
         {
             notifier.ShowLevelUpMessage(
-                level,
-                statPoints);
+                level, statPoints);
         }
     }
 
@@ -491,12 +572,12 @@ public class PlayerStats : MonoBehaviour
 
     void UpdateHealthUI()
     {
-        if (healthFill != null)
-        {
-            healthFill.fillAmount =
-                (float)currentHealth /
-                maxHealth;
-        }
+        if (healthFill == null) return;
+
+        if (maxHealth <= 0) return;
+
+        healthFill.fillAmount =
+            (float)currentHealth / maxHealth;
     }
 
     // =====================================
@@ -505,12 +586,12 @@ public class PlayerStats : MonoBehaviour
 
     void UpdateManaUI()
     {
-        if (manaFill != null)
-        {
-            manaFill.fillAmount =
-                (float)currentMana /
-                maxMana;
-        }
+        if (manaFill == null) return;
+
+        if (maxMana <= 0) return;
+
+        manaFill.fillAmount =
+            (float)currentMana / maxMana;
     }
 
     // =====================================

@@ -11,7 +11,7 @@ public class LootUI : MonoBehaviour
 
     public GameObject slotPrefab;
 
-    private LootBag currentBag;
+    private Container currentContainer;
 
     // =====================================
     // AWAKE
@@ -28,10 +28,9 @@ public class LootUI : MonoBehaviour
     // OPEN
     // =====================================
 
-    public void Open(
-        LootBag bag)
+    public void Open(Container container)
     {
-        currentBag = bag;
+        currentContainer = container;
 
         window.SetActive(true);
 
@@ -44,7 +43,7 @@ public class LootUI : MonoBehaviour
 
     public void Close()
     {
-        currentBag = null;
+        currentContainer = null;
 
         window.SetActive(false);
     }
@@ -55,23 +54,17 @@ public class LootUI : MonoBehaviour
 
     public void Refresh()
     {
-        // CLEAR OLD
-
         foreach (Transform child in slotContainer)
         {
             Destroy(child.gameObject);
         }
 
-        // INVALID
-
-        if (currentBag == null)
+        if (currentContainer == null)
         {
             return;
         }
 
-        // CREATE SLOTS
-
-        for (int i = 0; i < currentBag.slots.Count; i++)
+        for (int i = 0; i < currentContainer.slots.Count; i++)
         {
             GameObject slot =
                 Instantiate(
@@ -86,14 +79,10 @@ public class LootUI : MonoBehaviour
                 continue;
             }
 
-            // SLOT INFO
-
             slotUI.slotIndex = i;
 
             slotUI.parentContainer =
-                currentBag;
-
-            // REFRESH SLOT
+                currentContainer;
 
             slotUI.Refresh();
         }

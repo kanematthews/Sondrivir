@@ -1,0 +1,8 @@
+<linker>
+  <assembly fullname="Unity.Netcode.Runtime" preserve="all"/>
+  <assembly fullname="Unity.Netcode.Transports.UTP" preserve="all"/>
+  <assembly fullname="Unity.Networking.Transport" preserve="all"/>
+  <assembly fullname="Unity.Services.Relay" preserve="all"/>
+  <assembly fullname="Unity.Services.Authentication" preserve="all"/>
+  <assembly fullname="Unity.Services.Core" preserve="all"/>
+</linker>

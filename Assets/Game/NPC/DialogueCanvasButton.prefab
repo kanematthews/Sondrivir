@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 467904192574783987}
   - component: {fileID: 4921911824747809738}
   - component: {fileID: 6758451480223550467}
-  - component: {fileID: 841773473815601959}
+  - component: {fileID: 2968865877793468336}
   m_Layer: 5
   m_Name: DialogueCanvasButton
   m_TagString: Untagged
@@ -103,7 +103,7 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
---- !u!114 &841773473815601959
+--- !u!114 &2968865877793468336
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -112,10 +112,22 @@ MonoBehaviour:
   m_GameObject: {fileID: 275662179275806838}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fd48cd9e7ec4e4448a30e423507777bc, type: 3}
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DialogueChoiceButton
-  buttonText: {fileID: 8781132527328035179}
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
+  GlobalObjectIdHash: 4291991377
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 1
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
 --- !u!1 &1048275959307277764
 GameObject:
   m_ObjectHideFlags: 0

@@ -9,7 +9,8 @@ public class Container : MonoBehaviour
 
     public int slotCount = 8;
 
-    // FIXED SLOTS
+    // FIXED SLOTS (runtime only — do not edit in inspector)
+    [HideInInspector]
     public List<ItemStack> slots =
         new List<ItemStack>();
 
