@@ -3,25 +3,28 @@ using UnityEngine;
 public class NPCInteraction : MonoBehaviour
 {
     [Header("Dialogue")]
-    public NPCDialogueData dialogueData;
+    public NPCDialogueGraphData dialogue;
 
-    // =====================================
-    // INTERACT
-    // =====================================
+    [Header("Interaction")]
+    public float interactionDistance = 4f;
 
     public void Interact()
     {
-        // NO DATA
-
-        if (dialogueData == null)
+        if (NPCDialogueUI.instance == null)
         {
-            Debug.LogWarning(
-                "No dialogue data assigned.");
-
             return;
         }
 
         NPCDialogueUI.instance
             .OpenDialogue(this);
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.yellow;
+
+        Gizmos.DrawWireSphere(
+            transform.position,
+            interactionDistance);
     }
 }

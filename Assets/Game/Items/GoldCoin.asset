@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95ec1794d60db30438cc5c8206942c9c, type: 3}
+  m_Name: GoldCoin
+  m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  itemID: gold_coin
+  itemName: Gold Coin
+  description: Currency of the realm.
+  itemType: 5
+  isContainer: 0
+  containerSlots: 4
+  icon: {fileID: 0}
+  goldValue: 1
+  weight: 0
+  stackable: 1
+  maxStack: 999999
+  equippable: 0
+  equipmentSlotType: 0
+  twoHanded: 0
+  damage: 0
+  attackSpeed: 1
+  attackRange: 2
+  armor: 0
+  bonusStrength: 0
+  bonusDexterity: 0
+  bonusIntellect: 0
+  bonusVitality: 0
+  bonusHealth: 0
+  bonusMana: 0
+  bonusHPRegen: 0
+  bonusMPRegen: 0
+  bonusCritChance: 0
+  bonusCritDamage: 0
+  bonusMoveSpeed: 0
+  bonusCapacity: 0
+  enablePvp: 0
+  requiredStrength: 0
+  requiredDexterity: 0
+  requiredIntelligence: 0

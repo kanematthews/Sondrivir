@@ -10,6 +10,21 @@ public class QuestManager
             new List<QuestInstance>();
 
     // =====================================
+    // GOLD COIN ITEM
+    // =====================================
+
+    [Header("Economy")]
+    [Tooltip("Drag the GoldCoin ItemData asset here. " +
+             "Run MMO > Create Gold Coin Item to generate it.")]
+    public ItemData goldCoinItem;
+
+    // =====================================
+    // EVENTS
+    // =====================================
+
+    public System.Action onQuestUpdated;
+
+    // =====================================
     // START QUEST
     // =====================================
 
@@ -58,6 +73,8 @@ public class QuestManager
         Debug.Log(
             "Quest Started: " +
             quest.questName);
+
+        onQuestUpdated?.Invoke();
     }
 
     // =====================================
@@ -133,6 +150,105 @@ public class QuestManager
         return false;
     }
 
+    public bool HasQuestReadyToTurnIn(
+    string questID)
+    {
+        foreach (
+            QuestInstance q
+            in activeQuests)
+        {
+            if (
+                q.questData.questID ==
+                questID &&
+                q.state ==
+                QuestState.ReadyToTurnIn)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // =====================================
+    // AWARD GOLD
+    // =====================================
+
+    // Returns true if gold was awarded, false if inventory was full.
+    // 'message' contains a human-readable result either way.
+
+    public bool TryAwardGold(
+        int amount,
+        out string message)
+    {
+        message = "";
+
+        if (amount <= 0)
+        {
+            return true;
+        }
+
+        if (goldCoinItem == null)
+        {
+            // No coin item assigned — fall back to PlayerStats
+            PlayerStats stats =
+                FindFirstObjectByType<PlayerStats>();
+
+            if (stats != null)
+            {
+                stats.AddGold(amount);
+            }
+
+            message =
+                "+" + amount + "g";
+
+            return true;
+        }
+
+        // Try to add to inventory
+        PlayerInventory inventory =
+            FindFirstObjectByType<PlayerInventory>();
+
+        if (inventory == null)
+        {
+            message =
+                "No player inventory found.";
+
+            return false;
+        }
+
+        bool added =
+            inventory.AddItem(
+                goldCoinItem,
+                amount);
+
+        if (added)
+        {
+            message =
+                "+" + amount + "g added to inventory.";
+
+            return true;
+        }
+
+        // Inventory full — count occupied slots
+
+        int occupied = 0;
+
+        foreach (ItemStack s in inventory.slots)
+        {
+            if (s != null)
+            {
+                occupied++;
+            }
+        }
+
+        message =
+            "Your inventory is full! " +
+            "Clear some space and collect your reward.";
+
+        return false;
+    }
+
     // =====================================
     // REGISTER KILL
     // =====================================
@@ -196,6 +312,8 @@ public class QuestManager
                     objective.requiredAmount +
                     ")");
 
+                onQuestUpdated?.Invoke();
+
                 // CHECK COMPLETE
 
                 bool complete =
@@ -226,8 +344,14 @@ public class QuestManager
 
                 if (complete)
                 {
-                    CompleteQuest(
-                        quest.questData.questID);
+                    quest.state =
+                        QuestState.ReadyToTurnIn;
+
+                    Debug.Log(
+                        "Quest Ready To Turn In: " +
+                        quest.questData.questName);
+
+                    onQuestUpdated?.Invoke();
                 }
 
                 return;

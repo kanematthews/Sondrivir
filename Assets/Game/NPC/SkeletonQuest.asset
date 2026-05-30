@@ -18,8 +18,8 @@ MonoBehaviour:
     you to take care of them for her so she can clock out early and head home.
   objectives:
   - objectiveType: 0
-    description: 
-    targetID: 
-    requiredAmount: 0
+    description: Kill the boney boys.
+    targetID: skeleton
+    requiredAmount: 5
   goldReward: 30
   experienceReward: 100

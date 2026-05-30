@@ -13,6 +13,10 @@ public class EnemyAI : MonoBehaviour
 
     private PlayerStats playerStats;
 
+    [Header("Enemy")]
+    public string enemyID =
+        "skeleton";
+
     [Header("Roaming")]
     public float roamRadius = 5f;
 
@@ -65,6 +69,16 @@ public class EnemyAI : MonoBehaviour
 
     void Update()
     {
+        // =====================================
+        // DEBUG KILL
+        // PRESS K TO TEST QUESTS
+        // =====================================
+
+        if (Input.GetKeyDown(KeyCode.K))
+        {
+            Die();
+        }
+
         if (
             player == null ||
             playerStats == null)
@@ -83,6 +97,7 @@ public class EnemyAI : MonoBehaviour
                 spawnPosition);
 
         // PASSIVE ENEMIES ONLY AGGRO WHEN HIT
+
         if (
             enemyStats.behaviour ==
             EnemyBehaviour.Hostile)
@@ -95,12 +110,16 @@ public class EnemyAI : MonoBehaviour
             }
         }
 
+        // =====================================
         // CHASING
+        // =====================================
+
         if (engaged)
         {
             chaseTimer += Time.deltaTime;
 
             // GIVE UP CONDITIONS
+
             if (
                 distanceFromSpawn >
                 maxChaseDistance ||
@@ -109,6 +128,7 @@ public class EnemyAI : MonoBehaviour
                 giveUpTime)
             {
                 ReturnToSpawn();
+
                 return;
             }
 
@@ -118,9 +138,11 @@ public class EnemyAI : MonoBehaviour
                 player.position);
 
             // WALK ANIMATION
+
             SetMoving(true);
 
             // ATTACK RANGE
+
             if (
                 distanceToPlayer <=
                 enemyStats.attackRange)
@@ -138,6 +160,10 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
+    // =====================================
+    // HANDLE ROAMING
+    // =====================================
+
     void HandleRoaming()
     {
         idleTimer -= Time.deltaTime;
@@ -145,6 +171,7 @@ public class EnemyAI : MonoBehaviour
         if (idleTimer > 0)
         {
             SetMoving(false);
+
             return;
         }
 
@@ -178,6 +205,7 @@ public class EnemyAI : MonoBehaviour
         }
 
         // REACHED DESTINATION
+
         if (
             roaming &&
             !agent.pathPending &&
@@ -192,6 +220,10 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
+    // =====================================
+    // ATTACK PLAYER
+    // =====================================
+
     void AttackPlayer()
     {
         attackTimer += Time.deltaTime;
@@ -203,6 +235,7 @@ public class EnemyAI : MonoBehaviour
             attackTimer = 0f;
 
             // ATTACK ANIMATION
+
             if (animator != null)
             {
                 animator.ResetTrigger(
@@ -222,12 +255,20 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
+    // =====================================
+    // ENGAGE
+    // =====================================
+
     public void Engage()
     {
         engaged = true;
 
         chaseTimer = 0f;
     }
+
+    // =====================================
+    // RETURN TO SPAWN
+    // =====================================
 
     void ReturnToSpawn()
     {
@@ -245,6 +286,10 @@ public class EnemyAI : MonoBehaviour
         SetMoving(true);
     }
 
+    // =====================================
+    // SET MOVING
+    // =====================================
+
     void SetMoving(bool moving)
     {
         if (animator != null)
@@ -253,5 +298,35 @@ public class EnemyAI : MonoBehaviour
                 "Moving",
                 moving);
         }
+    }
+
+    // =====================================
+    // DIE
+    // =====================================
+
+    public void Die()
+    {
+        GameObject player =
+            GameObject.FindGameObjectWithTag(
+                "Player");
+
+        if (player != null)
+        {
+            QuestManager manager =
+                player.GetComponent
+                <QuestManager>();
+
+            if (manager != null)
+            {
+                manager.RegisterKill(
+                    enemyID);
+            }
+        }
+
+        Debug.Log(
+            enemyID +
+            " died.");
+
+        Destroy(gameObject);
     }
 }

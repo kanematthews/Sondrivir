@@ -1,0 +1,106 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: EllenDialogue
+  m_EditorClassIdentifier: Assembly-CSharp::NPCDialogueGraphData
+  npcName: Ellen
+  nodes:
+  - guid: e535a28f-e689-43af-97a4-f9e2070fa970
+    nodeType: 0
+    title: Greeting
+    npcText: 'Hello Traveler.
+
+      The graveyard is full of skeletons.'
+    position: {x: 0, y: 0}
+    questData: {fileID: 0}
+    enemyID: 
+    killCount: 0
+    xpReward: 0
+    goldReward: 0
+    opensTrade: 0
+    merchantID: 
+    requiredQuestID: 
+    requiresQuestComplete: 0
+    closeDialogue: 0
+  - guid: dcb2ed57-ac28-4e6f-aad8-b59765f82569
+    nodeType: 1
+    title: Offer Quest
+    npcText: Could you kill 5 skeletons for me?
+    position: {x: 609, y: 27}
+    questData: {fileID: 11400000, guid: d7d629b859a0ebf41afed0a8aae2cd8d, type: 2}
+    enemyID: skeleton
+    killCount: 5
+    xpReward: 0
+    goldReward: 0
+    opensTrade: 0
+    merchantID: 
+    requiredQuestID: 
+    requiresQuestComplete: 0
+    closeDialogue: 0
+  - guid: 8148a6f0-0831-4a68-a770-7b8131a2ea96
+    nodeType: 2
+    title: Check Progress
+    npcText: Have you killed 5 skeletons yet?
+    position: {x: 1236, y: 42}
+    questData: {fileID: 11400000, guid: d7d629b859a0ebf41afed0a8aae2cd8d, type: 2}
+    enemyID: skeleton
+    killCount: 0
+    xpReward: 0
+    goldReward: 0
+    opensTrade: 0
+    merchantID: 
+    requiredQuestID: 
+    requiresQuestComplete: 0
+    closeDialogue: 0
+  - guid: 8d229461-5ba4-4483-8db4-b23fac4a4c5d
+    nodeType: 3
+    title: Quest Complete
+    npcText: Amazing work!
+    position: {x: 1756, y: 42}
+    questData: {fileID: 11400000, guid: d7d629b859a0ebf41afed0a8aae2cd8d, type: 2}
+    enemyID: 
+    killCount: 0
+    xpReward: 100
+    goldReward: 25
+    opensTrade: 0
+    merchantID: 
+    requiredQuestID: 
+    requiresQuestComplete: 0
+    closeDialogue: 0
+  - guid: 48af52f5-2b1f-48ec-84a3-d2e79cd72303
+    nodeType: 6
+    title: Goodbye
+    npcText: Adios!
+    position: {x: 2284, y: 39}
+    questData: {fileID: 0}
+    enemyID: 
+    killCount: 0
+    xpReward: 0
+    goldReward: 0
+    opensTrade: 0
+    merchantID: 
+    requiredQuestID: 
+    requiresQuestComplete: 0
+    closeDialogue: 1
+  edges:
+  - outputGUID: e535a28f-e689-43af-97a4-f9e2070fa970
+    inputGUID: dcb2ed57-ac28-4e6f-aad8-b59765f82569
+    choiceText: Continue
+  - outputGUID: dcb2ed57-ac28-4e6f-aad8-b59765f82569
+    inputGUID: 8148a6f0-0831-4a68-a770-7b8131a2ea96
+    choiceText: Continue
+  - outputGUID: 8148a6f0-0831-4a68-a770-7b8131a2ea96
+    inputGUID: 8d229461-5ba4-4483-8db4-b23fac4a4c5d
+    choiceText: Continue
+  - outputGUID: 8d229461-5ba4-4483-8db4-b23fac4a4c5d
+    inputGUID: 48af52f5-2b1f-48ec-84a3-d2e79cd72303
+    choiceText: Continue

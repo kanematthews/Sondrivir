@@ -1,0 +1,82 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e873c746a6c0b04cb6d831a2d06da0c, type: 3}
+  m_Name: New NPC Dialogue
+  m_EditorClassIdentifier: Assembly-CSharp::NPCDialogueData
+  npcName: Villager
+  startingNodeID: ROOT
+  nodes: []
+  graphNodes:
+  - guid: d28ac448-f524-4643-aa17-6e6af6ba1459
+    nodeType: 0
+    nodeTitle: Dialogue
+    position: {x: 0, y: 0}
+    npcText: 
+    questAsset: {fileID: 0}
+    killCount: 0
+    enemyID: 
+    xpReward: 0
+    goldReward: 0
+    rewardRarity: 0
+    opensTrade: 0
+    merchantID: 
+    requiredQuestID: 
+    requiresQuestCompletion: 0
+    closeDialogue: 0
+  - guid: 4606f4c7-5738-4fa6-bd6e-0dc95c48dc3d
+    nodeType: 1
+    nodeTitle: Skeletons
+    position: {x: 0, y: 0}
+    npcText: "Kill 5 skeletons in the woods.\t"
+    questAsset: {fileID: 0}
+    killCount: 5
+    enemyID: skeleton
+    xpReward: 150
+    goldReward: 0
+    rewardRarity: 0
+    opensTrade: 0
+    merchantID: 
+    requiredQuestID: 
+    requiresQuestCompletion: 0
+    closeDialogue: 0
+  - guid: 695fe9e0-94ff-47f1-a696-797e841124b8
+    nodeType: 0
+    nodeTitle: Greeting
+    position: {x: 0, y: 0}
+    npcText: Sup here's a quest. You man enough?
+    questAsset: {fileID: 0}
+    killCount: 0
+    enemyID: 
+    xpReward: 0
+    goldReward: 0
+    rewardRarity: 0
+    opensTrade: 0
+    merchantID: 
+    requiredQuestID: 
+    requiresQuestCompletion: 0
+    closeDialogue: 0
+  - guid: d5dee4cc-a4e2-4372-a196-26ef4b5c588d
+    nodeType: 2
+    nodeTitle: Quest Complete
+    position: {x: 0, y: 0}
+    npcText: You Survived! Maybe you're useful after all.
+    questAsset: {fileID: 0}
+    killCount: 0
+    enemyID: 
+    xpReward: 0
+    goldReward: 0
+    rewardRarity: 0
+    opensTrade: 1
+    merchantID: starter_merchant
+    requiredQuestID: 
+    requiresQuestCompletion: 0
+    closeDialogue: 0

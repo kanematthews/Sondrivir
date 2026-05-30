@@ -335,11 +335,46 @@ public class EnemyStats : MonoBehaviour
         Debug.Log(
             enemyName + " died.");
 
+        // =====================================
+        // QUEST KILL TRACKING
+        // =====================================
+
+        EnemyAI ai =
+            GetComponent<EnemyAI>();
+
+        if (ai != null)
+        {
+            GameObject playerObj =
+                GameObject.FindGameObjectWithTag(
+                    "Player");
+
+            if (playerObj != null)
+            {
+                QuestManager manager =
+                    playerObj.GetComponent
+                    <QuestManager>();
+
+                if (manager != null)
+                {
+                    manager.RegisterKill(
+                        ai.enemyID);
+
+                    Debug.Log(
+                        "REGISTERED KILL: " +
+                        ai.enemyID);
+                }
+            }
+        }
+
+        // =====================================
         // SPAWN LOOT BAG
+        // =====================================
 
         SpawnLootBag();
 
+        // =====================================
         // GIVE PLAYER EXP
+        // =====================================
 
         PlayerStats player =
             FindFirstObjectByType<PlayerStats>();
@@ -349,6 +384,10 @@ public class EnemyStats : MonoBehaviour
             player.GainExperience(
                 experienceReward);
         }
+
+        // =====================================
+        // DISABLE ENEMY
+        // =====================================
 
         gameObject.SetActive(false);
 

@@ -16,90 +16,133 @@ MonoBehaviour:
   startingNodeID: ROOT
   nodes:
   - nodeID: ROOT
+    nodeType: 0
     npcText: Ah... Someone new..
+    editorPosition: {x: 0, y: 0}
     choices:
     - playerText: Who are you?
       nextNodeID: WHO1
       closesDialogue: 0
       opensTrade: 0
       startsQuest: 0
+      completesQuest: 0
       questToStart: {fileID: 0}
+      questToCompleteID: 
       requiredCompletedQuestID: 
+      requiredReadyToTurnInQuestID: 
     - playerText: Where Am I?
       nextNodeID: WHERE1
       closesDialogue: 0
       opensTrade: 0
       startsQuest: 0
+      completesQuest: 0
       questToStart: {fileID: 0}
+      questToCompleteID: 
       requiredCompletedQuestID: 
+      requiredReadyToTurnInQuestID: 
     - playerText: Do you need any help with anything?
       nextNodeID: QUEST1
       closesDialogue: 0
       opensTrade: 0
       startsQuest: 0
-      questToStart: {fileID: 11400000, guid: d7d629b859a0ebf41afed0a8aae2cd8d, type: 2}
+      completesQuest: 0
+      questToStart: {fileID: 0}
+      questToCompleteID: 
       requiredCompletedQuestID: 
+      requiredReadyToTurnInQuestID: 
   - nodeID: WHERE1
+    nodeType: 0
     npcText: We're a little bit south of the capital, Arcanum and few miles from
       the small town of Treason. Arcanum isn't really the same anymore.
+    editorPosition: {x: 850, y: -325}
     choices:
     - playerText: Why isn't it the same?
       nextNodeID: MAGES1
       closesDialogue: 0
       opensTrade: 0
       startsQuest: 0
+      completesQuest: 0
       questToStart: {fileID: 0}
+      questToCompleteID: 
       requiredCompletedQuestID: 
+      requiredReadyToTurnInQuestID: 
   - nodeID: MAGES1
+    nodeType: 0
     npcText: The damn.. magocracy - all of them are magic obsessed, knowledge rich,
       introverted assholes.
+    editorPosition: {x: 1700, y: -325}
     choices:
     - playerText: Why isn't it the same?
-      nextNodeID: MAGES1
+      nextNodeID: MAGES2
       closesDialogue: 1
       opensTrade: 0
       startsQuest: 0
+      completesQuest: 0
       questToStart: {fileID: 0}
+      questToCompleteID: 
       requiredCompletedQuestID: 
+      requiredReadyToTurnInQuestID: 
   - nodeID: QUEST1
+    nodeType: 0
     npcText: Their seems to be some weird boney fellas that have been roaming these
       woods lately. Don't want some random lumber jack getting killed... take care
       of them for me?
+    editorPosition: {x: 850, y: 325}
     choices:
     - playerText: Sure!
-      nextNodeID: 
+      nextNodeID: QUEST2
       closesDialogue: 0
       opensTrade: 0
       startsQuest: 1
+      completesQuest: 0
       questToStart: {fileID: 11400000, guid: d7d629b859a0ebf41afed0a8aae2cd8d, type: 2}
+      questToCompleteID: 
       requiredCompletedQuestID: 
-    - playerText: Sure!
-      nextNodeID: 
-      closesDialogue: 0
-      opensTrade: 0
-      startsQuest: 1
-      questToStart: {fileID: 11400000, guid: d7d629b859a0ebf41afed0a8aae2cd8d, type: 2}
-      requiredCompletedQuestID: 
-  - nodeID: QUEST1
-    npcText: Their seems to be some weird boney fellas that have been roaming these
-      woods lately. Don't want some random lumber jack getting killed... take care
-      of them for me?
+      requiredReadyToTurnInQuestID: 
+  - nodeID: QUEST2
+    nodeType: 0
+    npcText: Amazing thank you so much. Come back after killing a few of them and
+      I'll pay you!
+    editorPosition: {x: 1700, y: 325}
     choices:
-    - playerText: Sure!
-      nextNodeID: 
-      closesDialogue: 0
-      opensTrade: 0
-      startsQuest: 1
-      questToStart: {fileID: 11400000, guid: d7d629b859a0ebf41afed0a8aae2cd8d, type: 2}
-      requiredCompletedQuestID: 
-  - nodeID: QUEST1
-    npcText: Ah yeah. Seems to be some weird stuff going on with the air waves or
-      something. -I'm no wizard though.
-    choices:
-    - playerText: Thanks for letting me know.
+    - playerText: '[End conversation]'
       nextNodeID: 
       closesDialogue: 1
       opensTrade: 0
-      startsQuest: 1
-      questToStart: {fileID: 11400000, guid: f23d0437bc008d44c8d0aa91d1ead6b3, type: 2}
+      startsQuest: 0
+      completesQuest: 0
+      questToStart: {fileID: 0}
+      questToCompleteID: 
       requiredCompletedQuestID: 
+      requiredReadyToTurnInQuestID: 
+  - nodeID: QUEST2
+    nodeType: 0
+    npcText: Amazing thank you so much. Come back after killing a few of them and
+      I'll pay you!
+    editorPosition: {x: 1300, y: 1100}
+    choices:
+    - playerText: I killed the Skeletons.
+      nextNodeID: 
+      closesDialogue: 1
+      opensTrade: 0
+      startsQuest: 0
+      completesQuest: 0
+      questToStart: {fileID: 0}
+      questToCompleteID: 
+      requiredCompletedQuestID: 
+      requiredReadyToTurnInQuestID: skeleton_menace
+  - nodeID: NODE_6
+    nodeType: 0
+    npcText: New dialogue...
+    editorPosition: {x: 60.975586, y: 484.14636}
+    choices:
+    - playerText: 
+      nextNodeID: 
+      closesDialogue: 0
+      opensTrade: 0
+      startsQuest: 0
+      completesQuest: 0
+      questToStart: {fileID: 0}
+      questToCompleteID: 
+      requiredCompletedQuestID: 
+      requiredReadyToTurnInQuestID: 

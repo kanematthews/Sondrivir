@@ -2,80 +2,70 @@ using UnityEngine;
 
 public class PlayerInteractionController : MonoBehaviour
 {
-    [Header("Settings")]
-    public float interactDistance = 5f;
+    [Header("Interaction")]
+    public float maxInteractionDistance = 5f;
 
-    void Update()
+    [Header("References")]
+    public Camera playerCamera;
+
+    private void Start()
     {
-        HandleRightClick();
+        if (playerCamera == null)
+        {
+            playerCamera = Camera.main;
+        }
     }
 
-    // =====================================
-    // RIGHT CLICK
-    // =====================================
-
-    void HandleRightClick()
+    private void Update()
     {
-        if (!Input.GetMouseButtonDown(1))
+        if (Input.GetMouseButtonDown(1))
+        {
+            TryInteract();
+        }
+    }
+
+    private void TryInteract()
+    {
+        if (playerCamera == null)
         {
             return;
         }
 
         Ray ray =
-            Camera.main.ScreenPointToRay(
+            playerCamera.ScreenPointToRay(
                 Input.mousePosition);
 
-        RaycastHit hit;
-
         if (
-            Physics.Raycast(
+            !Physics.Raycast(
                 ray,
-                out hit,
+                out RaycastHit hit,
                 100f))
         {
-            // =================================
-            // NPC INTERACTION
-            // =================================
-
-            NPCInteraction npc =
-                hit.collider.GetComponentInParent
-                <NPCInteraction>();
-
-            if (npc != null)
-            {
-                float distance =
-                    Vector3.Distance(
-                        transform.position,
-                        npc.transform.position);
-
-                // TOO FAR
-
-                if (
-                    distance >
-                    interactDistance)
-                {
-                    Debug.Log(
-                        "Too far away.");
-
-                    return;
-                }
-
-                npc.Interact();
-
-                return;
-            }
-
-            // =================================
-            // FUTURE INTERACTIONS
-            // =================================
-
-            // Loot
-            // Players
-            // Enemies
-            // Doors
-            // Chests
-            // Gathering
-            // Etc
+            return;
         }
+
+        NPCInteraction npc =
+            hit.collider.GetComponentInParent<NPCInteraction>();
+
+        if (npc == null)
+        {
+            return;
+        }
+
+        float distance =
+            Vector3.Distance(
+                transform.position,
+                npc.transform.position);
+
+        if (
+            distance >
+            npc.interactionDistance)
+        {
+            Debug.Log(
+                "Too far away.");
+            return;
+        }
+
+        npc.Interact();
     }
 }

@@ -1,6 +1,8 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using System.Collections.Generic;
+using System.Linq;
 
 public class NPCDialogueUI : MonoBehaviour
 {
@@ -14,49 +16,53 @@ public class NPCDialogueUI : MonoBehaviour
 
     public TMP_Text dialogueText;
 
-    [Header("Input")]
-    public TMP_InputField playerInputField;
-
-    [Header("Distance")]
-    public float maxDialogueDistance = 5f;
-
-    [Header("Buttons")]
-    public Button submitButton;
-
-    public Button backButton;
-
-    [Header("Dialogue Choices")]
+    [Header("Choices")]
     public Transform choiceContainer;
 
     public GameObject choiceButtonPrefab;
 
+    [Header("Distance")]
+    public float maxDialogueDistance = 5f;
+
+    // =====================================================
     // CURRENT NPC
+    // =====================================================
 
     private NPCInteraction currentNPC;
 
+    // =====================================================
+    // CURRENT GRAPH
+    // =====================================================
+
+    private NPCDialogueGraphData currentGraph;
+
+    // =====================================================
     // CURRENT NODE
+    // =====================================================
 
-    private DialogueNode currentNode;
+    private UnifiedNPCGraphEditor
+        .GraphNodeData currentNode;
 
-    // =====================================
+    // =====================================================
     // AWAKE
-    // =====================================
+    // =====================================================
 
-    void Awake()
+    private void Awake()
     {
         instance = this;
 
-        dialoguePanel.SetActive(false);
+        if (dialoguePanel != null)
+        {
+            dialoguePanel.SetActive(false);
+        }
     }
 
-    // =====================================
+    // =====================================================
     // UPDATE
-    // =====================================
+    // =====================================================
 
-    void Update()
+    private void Update()
     {
-        // NO ACTIVE DIALOGUE
-
         if (
             currentNPC == null ||
             !dialoguePanel.activeSelf)
@@ -64,9 +70,7 @@ public class NPCDialogueUI : MonoBehaviour
             return;
         }
 
-        // =================================
-        // SPACE CLOSES DIALOGUE
-        // =================================
+        // CLOSE WITH SPACE
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
@@ -75,9 +79,7 @@ public class NPCDialogueUI : MonoBehaviour
             return;
         }
 
-        // =================================
-        // FIND PLAYER
-        // =================================
+        // PLAYER DISTANCE
 
         GameObject player =
             GameObject.FindGameObjectWithTag(
@@ -88,16 +90,10 @@ public class NPCDialogueUI : MonoBehaviour
             return;
         }
 
-        // =================================
-        // DISTANCE CHECK
-        // =================================
-
         float distance =
             Vector3.Distance(
                 player.transform.position,
                 currentNPC.transform.position);
-
-        // TOO FAR
 
         if (distance > maxDialogueDistance)
         {
@@ -105,76 +101,569 @@ public class NPCDialogueUI : MonoBehaviour
         }
     }
 
-    // =====================================
+    // =====================================================
     // OPEN DIALOGUE
-    // =====================================
+    // =====================================================
 
     public void OpenDialogue(
         NPCInteraction npc)
     {
-        // INVALID
-
         if (
             npc == null ||
-            npc.dialogueData == null)
+            npc.dialogue == null)
         {
             return;
         }
 
         currentNPC = npc;
 
+        currentGraph =
+            npc.dialogue;
+
         dialoguePanel.SetActive(true);
 
         npcNameText.text =
-            npc.dialogueData.npcName;
+            currentGraph.npcName;
 
-        // LOAD START NODE
-
-        LoadNode(
-            npc.dialogueData.startingNodeID);
-
-        playerInputField.text = "";
-    }
-
-    // =====================================
-    // LOAD NODE
-    // =====================================
-
-    void LoadNode(
-        string nodeID)
-    {
-        if (
-            currentNPC == null ||
-            currentNPC.dialogueData == null)
+        if (currentGraph.nodes.Count <= 0)
         {
             return;
         }
 
-        foreach (
-            DialogueNode node
-            in currentNPC.dialogueData.nodes)
+        // LOAD FIRST NODE
+
+        LoadNode(
+            currentGraph.nodes[0]);
+    }
+
+    // =====================================================
+    // LOAD NODE
+    // =====================================================
+
+    public void LoadNode(
+        UnifiedNPCGraphEditor
+            .GraphNodeData node)
+    {
+        currentNode = node;
+
+        dialogueText.text =
+            node.npcText;
+
+        GenerateChoices();
+    }
+
+    // =====================================================
+    // GENERATE CHOICES
+    // =====================================================
+
+    private void GenerateChoices()
+    {
+        ClearChoices();
+
+        if (
+            currentGraph == null ||
+            currentNode == null)
         {
-            if (node.nodeID == nodeID)
+            return;
+        }
+
+        List<
+            UnifiedNPCGraphEditor
+            .GraphEdgeData> connections =
+                currentGraph.edges
+                .FindAll(
+                    x =>
+                    x.outputGUID ==
+                    currentNode.guid);
+
+        foreach (
+            UnifiedNPCGraphEditor
+            .GraphEdgeData edge
+            in connections)
+        {
+            GameObject buttonObj =
+                Instantiate(
+                    choiceButtonPrefab,
+                    choiceContainer);
+
+            TMP_Text text =
+                buttonObj.GetComponentInChildren
+                <TMP_Text>();
+
+            if (text != null)
             {
-                currentNode = node;
+                text.text =
+                    string.IsNullOrWhiteSpace(
+                        edge.choiceText)
+                    ? "Continue"
+                    : edge.choiceText;
+            }
 
-                dialogueText.text =
-                    node.npcText;
+            StyleChoiceButton(buttonObj);
 
-                GenerateChoices();
+            Button button =
+                buttonObj.GetComponent<Button>();
 
-                return;
+            if (button != null)
+            {
+                button.onClick.AddListener(
+                    () =>
+                    {
+                        SelectChoice(edge);
+                    });
             }
         }
 
-        Debug.LogWarning(
-            "Node not found: " +
-            nodeID);
+        // NO CONNECTIONS
+
+        if (connections.Count <= 0)
+        {
+            GameObject buttonObj =
+                Instantiate(
+                    choiceButtonPrefab,
+                    choiceContainer);
+
+            TMP_Text text =
+                buttonObj.GetComponentInChildren
+                <TMP_Text>();
+
+            if (text != null)
+            {
+                text.text =
+                    "[End Conversation]";
+            }
+
+            StyleChoiceButton(buttonObj);
+
+            Button button =
+                buttonObj.GetComponent<Button>();
+
+            if (button != null)
+            {
+                button.onClick.AddListener(
+                    () =>
+                    {
+                        CloseDialogue();
+                    });
+            }
+        }
     }
 
-    // =====================================
+    // =====================================================
+    // SHOW BLOCK MESSAGE
+    // =====================================================
+
+    private void ShowBlockMessage(
+        string message,
+        string buttonLabel)
+    {
+        dialogueText.text = message;
+
+        ClearChoices();
+
+        GameObject btn =
+            Instantiate(
+                choiceButtonPrefab,
+                choiceContainer);
+
+        TMP_Text label =
+            btn.GetComponentInChildren<TMP_Text>(true);
+
+        if (label != null)
+        {
+            label.text = buttonLabel;
+        }
+
+        StyleChoiceButton(btn);
+
+        Button button =
+            btn.GetComponent<Button>();
+
+        if (button != null)
+        {
+            button.onClick.AddListener(CloseDialogue);
+        }
+    }
+
+    // =====================================================
+    // STYLE CHOICE BUTTON
+    // =====================================================
+
+    private void StyleChoiceButton(
+        GameObject btn)
+    {
+        if (btn == null)
+        {
+            return;
+        }
+
+        Image img =
+            btn.GetComponent<Image>();
+
+        if (img != null)
+        {
+            img.color =
+                new Color(
+                    0.12f, 0.11f, 0.09f, 1f);
+        }
+
+        Button button =
+            btn.GetComponent<Button>();
+
+        if (button != null)
+        {
+            ColorBlock cb = button.colors;
+
+            cb.normalColor =
+                new Color(
+                    0.12f, 0.11f, 0.09f, 1f);
+
+            cb.highlightedColor =
+                new Color(
+                    0.22f, 0.19f, 0.10f, 1f);
+
+            cb.pressedColor =
+                new Color(
+                    0.30f, 0.26f, 0.12f, 1f);
+
+            button.colors = cb;
+        }
+
+        TMP_Text label =
+            btn.GetComponentInChildren<TMP_Text>(true);
+
+        if (label != null)
+        {
+            label.color =
+                new Color(
+                    0.95f, 0.88f, 0.65f, 1f);
+
+            label.fontSize = 13f;
+        }
+    }
+
+    // =====================================================
+    // SELECT CHOICE
+    // =====================================================
+
+    public void SelectChoice(
+        UnifiedNPCGraphEditor
+            .GraphEdgeData edge)
+    {
+        UnifiedNPCGraphEditor
+            .GraphNodeData nextNode =
+                currentGraph.nodes
+                .Find(
+                    x =>
+                    x.guid ==
+                    edge.inputGUID);
+
+        if (nextNode == null)
+        {
+            return;
+        }
+
+        ExecuteNode(nextNode);
+    }
+
+    // =====================================================
+    // EXECUTE NODE
+    // =====================================================
+
+    private void ExecuteNode(
+UnifiedNPCGraphEditor
+.GraphNodeData node)
+{
+currentNode = node;
+
+
+QuestManager questManager =
+    FindFirstObjectByType<QuestManager>();
+
+switch (node.nodeType)
+{
+    // =================================
+    // DIALOGUE
+    // =================================
+
+    case UnifiedNPCGraphEditor
+        .NodeType.Dialogue:
+
+        LoadNode(node);
+        break;
+
+    // =================================
+    // QUEST OFFER
+    // =================================
+
+    case UnifiedNPCGraphEditor
+        .NodeType.QuestOffer:
+
+        if (
+            node.questData != null &&
+            questManager != null)
+        {
+            bool alreadyHasQuest =
+                questManager.activeQuests
+                .Exists(
+                    q =>
+                    q.questData ==
+                    node.questData);
+
+            if (!alreadyHasQuest)
+            {
+                questManager.StartQuest(
+                    node.questData);
+            }
+        }
+
+        // Show quest info in dialogue text
+        if (node.questData != null)
+        {
+            dialogueText.text =
+                node.npcText +
+                "\n\n<b>" +
+                node.questData.questName +
+                "</b>\n" +
+                node.questData.description;
+        }
+        else
+        {
+            dialogueText.text =
+                node.npcText;
+        }
+
+        GenerateChoices();
+        break;
+
+    // =================================
+    // QUEST CHECK
+    // =================================
+
+    case UnifiedNPCGraphEditor
+        .NodeType.QuestCheck:
+
+        bool readyToTurnIn =
+            false;
+
+        if (
+            node.questData != null &&
+            questManager != null)
+        {
+            QuestInstance quest =
+                questManager.activeQuests
+                .Find(
+                    q =>
+                    q.questData ==
+                    node.questData);
+
+            if (
+                quest != null &&
+                quest.state ==
+                QuestState.ReadyToTurnIn)
+            {
+                readyToTurnIn =
+                    true;
+            }
+        }
+
+        if (!readyToTurnIn)
+        {
+            dialogueText.text =
+                node.npcText +
+                "\n\n(Quest not complete yet)";
+
+            ClearChoices();
+
+            GameObject buttonObj =
+                Instantiate(
+                    choiceButtonPrefab,
+                    choiceContainer);
+
+            TMP_Text text =
+                buttonObj
+                .GetComponentInChildren
+                <TMP_Text>();
+
+            if (text != null)
+            {
+                text.text =
+                    "I'll come back later.";
+            }
+
+            Button button =
+                buttonObj
+                .GetComponent<Button>();
+
+            if (button != null)
+            {
+                button.onClick
+                    .AddListener(
+                        CloseDialogue);
+            }
+
+            return;
+        }
+
+        LoadNode(node);
+
+        break;
+
+    // =================================
+    // QUEST TURN IN
+    // =================================
+
+    case UnifiedNPCGraphEditor
+        .NodeType.QuestTurnIn:
+
+        if (
+            node.questData != null &&
+            questManager != null)
+        {
+            // ── QUEST NOT READY ───────────────
+
+            bool readyForTurnIn =
+                questManager
+                    .HasQuestReadyToTurnIn(
+                        node.questData.questID);
+
+            if (!readyForTurnIn)
+            {
+                ShowBlockMessage(
+                    node.npcText +
+                    "\n\n<color=#AAAAAA><i>You haven't finished the quest yet — come back when you have.</i></color>",
+                    "I'll come back when I'm done.");
+
+                return;
+            }
+
+            // ── AWARD GOLD (inventory item) ───
+
+            string goldMessage = "";
+            bool goldOk = true;
+
+            if (node.questData.goldReward > 0)
+            {
+                goldOk = questManager.TryAwardGold(
+                    node.questData.goldReward,
+                    out goldMessage);
+            }
+
+            if (!goldOk)
+            {
+                // Inventory full for gold coins
+                ShowBlockMessage(
+                    "<color=#E8A020>You can't carry your reward!</color>\n\n" +
+                    goldMessage +
+                    "\n\nClear some slots and speak to me again.",
+                    "I'll make room first.");
+
+                return;
+            }
+
+            // ── AWARD XP (goes to PlayerStats) ──
+
+            questManager.CompleteQuest(
+                node.questData.questID);
+
+            PlayerStats stats =
+                FindFirstObjectByType<PlayerStats>();
+
+            if (stats != null &&
+                node.questData.experienceReward > 0)
+            {
+                stats.GainExperience(
+                    node.questData.experienceReward);
+            }
+
+            // ── SUCCESS FLAVOUR ───────────────
+
+            string rewardLine = "";
+
+            if (node.questData.goldReward > 0)
+            {
+                rewardLine +=
+                    "<color=#FFD700>+" +
+                    node.questData.goldReward +
+                    "g</color>";
+            }
+
+            if (node.questData.experienceReward > 0)
+            {
+                if (rewardLine.Length > 0)
+                {
+                    rewardLine += "  ";
+                }
+
+                rewardLine +=
+                    "<color=#88CCFF>+" +
+                    node.questData.experienceReward +
+                    " XP</color>";
+            }
+
+            dialogueText.text =
+                node.npcText +
+                (rewardLine.Length > 0
+                    ? "\n\n" + rewardLine
+                    : "");
+        }
+
+        GenerateChoices();
+
+        break;
+
+    // =================================
+    // TRADE
+    // =================================
+
+    case UnifiedNPCGraphEditor
+        .NodeType.Trade:
+
+        LoadNode(node);
+        break;
+
+    // =================================
+    // CONDITION
+    // =================================
+
+    case UnifiedNPCGraphEditor
+        .NodeType.Condition:
+
+        LoadNode(node);
+        break;
+
+    // =================================
+    // END
+    // =================================
+
+    case UnifiedNPCGraphEditor
+        .NodeType.End:
+
+        CloseDialogue();
+        break;
+}
+
+}
+
+
+    // =====================================================
+    // CLEAR CHOICES
+    // =====================================================
+
+    private void ClearChoices()
+    {
+        foreach (
+            Transform child
+            in choiceContainer)
+        {
+            Destroy(
+                child.gameObject);
+        }
+    }
+
+    // =====================================================
     // CLOSE
-    // =====================================
+    // =====================================================
 
     public void CloseDialogue()
     {
@@ -182,210 +671,10 @@ public class NPCDialogueUI : MonoBehaviour
 
         currentNPC = null;
 
+        currentGraph = null;
+
         currentNode = null;
 
         ClearChoices();
-    }
-
-    // =====================================
-    // GENERATE CHOICES
-    // =====================================
-
-    void GenerateChoices()
-    {
-        ClearChoices();
-
-        if (
-            currentNode == null ||
-            currentNode.choices == null)
-        {
-            return;
-        }
-
-        foreach (
-            DialogueChoice choice
-            in currentNode.choices)
-        {
-            // =================================
-            // QUEST REQUIREMENTS
-            // =================================
-
-            if (
-                !string.IsNullOrWhiteSpace(
-                    choice.requiredCompletedQuestID))
-            {
-                GameObject player =
-                    GameObject.FindGameObjectWithTag(
-                        "Player");
-
-                if (player != null)
-                {
-                    QuestManager manager =
-                        player.GetComponent
-                        <QuestManager>();
-
-                    if (manager != null)
-                    {
-                        bool completed =
-                            manager.HasCompletedQuest(
-                                choice
-                                .requiredCompletedQuestID);
-
-                        if (!completed)
-                        {
-                            continue;
-                        }
-                    }
-                }
-            }
-
-            // =================================
-            // CREATE BUTTON
-            // =================================
-
-            GameObject obj =
-                Instantiate(
-                    choiceButtonPrefab,
-                    choiceContainer);
-
-            DialogueChoiceButton button =
-                obj.GetComponent
-                <DialogueChoiceButton>();
-
-            if (button != null)
-            {
-                button.Setup(choice);
-            }
-        }
-    }
-
-    // =====================================
-    // CLEAR CHOICES
-    // =====================================
-
-    void ClearChoices()
-    {
-        for (
-            int i =
-            choiceContainer.childCount - 1;
-            i >= 0;
-            i--)
-        {
-            Destroy(
-                choiceContainer
-                    .GetChild(i)
-                    .gameObject);
-        }
-    }
-
-    // =====================================
-    // SELECT CHOICE
-    // =====================================
-
-    public void SelectChoice(
-        DialogueChoice choice)
-    {
-        if (choice == null)
-        {
-            return;
-        }
-
-        // =================================
-        // CLOSE
-        // =================================
-
-        if (choice.closesDialogue)
-        {
-            CloseDialogue();
-
-            return;
-        }
-
-        // =================================
-        // TRADE
-        // =================================
-
-        if (choice.opensTrade)
-        {
-            Debug.Log(
-                "OPEN TRADE WINDOW");
-        }
-
-        // =================================
-        // QUEST
-        // =================================
-
-        if (
-            choice.startsQuest &&
-            choice.questToStart != null)
-        {
-            GameObject player =
-                GameObject.FindGameObjectWithTag(
-                    "Player");
-
-            if (player != null)
-            {
-                QuestManager manager =
-                    player.GetComponent
-                    <QuestManager>();
-
-                if (manager != null)
-                {
-                    manager.StartQuest(
-                        choice.questToStart);
-                }
-            }
-        }
-
-        // =================================
-        // NEXT NODE
-        // =================================
-
-        LoadNode(
-            choice.nextNodeID);
-    }
-
-    // =====================================
-    // PLAYER INPUT
-    // =====================================
-
-    public void SubmitPlayerInput()
-    {
-        if (currentNPC == null)
-        {
-            return;
-        }
-
-        string input =
-            playerInputField.text
-                .ToLower()
-                .Trim();
-
-        // EMPTY
-
-        if (string.IsNullOrWhiteSpace(input))
-        {
-            return;
-        }
-
-        // SECRET KEYWORDS
-
-        if (input.Contains("cult"))
-        {
-            dialogueText.text =
-                "Keep your voice down...";
-        }
-        else if (input.Contains("ruins"))
-        {
-            dialogueText.text =
-                "The eastern ruins are cursed.";
-        }
-        else
-        {
-            dialogueText.text =
-                "I don't know much about that.";
-        }
-
-        playerInputField.text = "";
     }
 }

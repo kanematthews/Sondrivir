@@ -101,6 +101,13 @@ public class PlayerStats : MonoBehaviour
     public bool pvpEnabled = false;
 
     // =====================================
+    // CURRENCY
+    // =====================================
+
+    [Header("Currency")]
+    public int gold = 0;
+
+    // =====================================
     // UI
     // =====================================
 
@@ -415,6 +422,19 @@ public class PlayerStats : MonoBehaviour
     }
 
     // =====================================
+    // GOLD
+    // =====================================
+
+    public void AddGold(int amount)
+    {
+        gold += amount;
+
+        Debug.Log(
+            "Gold: +" + amount +
+            " (Total: " + gold + ")");
+    }
+
+    // =====================================
     // EXPERIENCE
     // =====================================
 
@@ -446,6 +466,23 @@ public class PlayerStats : MonoBehaviour
         experienceToNextLevel *= 2;
 
         RecalculateStats();
+
+        // Notify HUD
+        LevelUpNotifier notifier =
+            GetComponentInParent<LevelUpNotifier>();
+
+        if (notifier == null)
+        {
+            notifier =
+                FindFirstObjectByType<LevelUpNotifier>();
+        }
+
+        if (notifier != null)
+        {
+            notifier.ShowLevelUpMessage(
+                level,
+                statPoints);
+        }
     }
 
     // =====================================
